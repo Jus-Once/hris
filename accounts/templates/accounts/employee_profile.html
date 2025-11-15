@@ -1,0 +1,272 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LGU Paombong – My Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /* keep styling consistent with other employee pages; a simpler version */
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: #eef3ff;
+      color: #222;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .top-bar, .sub-bar, footer {
+      padding: 10px 40px;
+      color: #fff;
+    }
+    .top-bar { background:#003b8e; display:flex; justify-content:space-between; align-items:flex-end; }
+    .brand-left { display:flex; flex-direction:column; gap:2px; }
+    .brand-title { font-family:"Times New Roman", serif; font-size:26px; }
+    .brand-subtitle { font-size:13px; }
+    .top-nav { display:flex; gap:24px; font-size:14px; align-items:center; }
+    .top-nav a { color:#fff; text-decoration:none; position:relative; padding-bottom:2px;}
+    .top-nav a::after {content:""; position:absolute; left:0; bottom:0; width:0; height:2px;
+      background:#fff; transition:width .2s;}
+    .top-nav a:hover::after {width:100%;}
+
+    .sub-bar { background:#1f2955; display:flex; justify-content:space-between; align-items:center; padding-top:8px; padding-bottom:8px;}
+    .sub-left { display:flex; gap:15px; align-items:center;}
+    .sub-logo { width:70px; height:70px; border-radius:50%; background:#ffe700; border:3px solid #fff; overflow:hidden; display:flex; align-items:center; justify-content:center;}
+    .sub-logo img { width:100%; height:100%; object-fit:cover; border-radius:50%;}
+    .sub-text { display:flex; flex-direction:column; gap:2px;}
+    .sub-text-small { font-size:11px;}
+    .sub-text-main { font-size:18px; font-style:italic;}
+
+    .sub-right { display:flex; gap:16px; align-items:center; font-size:13px;}
+    .notif-icon, .user-circle {
+      width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    }
+    .notif-icon { border:2px solid #ffc857;}
+    .user-circle { border:2px solid #fff; width:38px; height:38px;}
+    .logout-btn { padding:6px 16px; border-radius:999px; border:none; background:#00a0e3; color:#fff; cursor:pointer;}
+
+    main { flex:1; padding:24px 40px 40px;}
+    .layout { display:grid; grid-template-columns:260px minmax(0,1fr); gap:22px;}
+
+    .sidebar {
+      background:#fff; border-radius:8px; box-shadow:0 10px 18px rgba(0,0,0,0.12);
+      padding:24px 18px; display:flex; flex-direction:column; gap:22px;
+    }
+    .side-item { display:flex; gap:16px; align-items:center; cursor:pointer; font-size:17px;}
+    .side-item-icon { width:30px; height:30px; border-radius:6px; background:#f4f6fb; display:flex; align-items:center; justify-content:center;}
+    .side-item.active { font-weight:600; color:#003b8e;}
+
+    .profile-wrapper { display:flex; flex-direction:column; gap:18px;}
+    .card {
+      background:#fff; border-radius:8px; box-shadow:0 10px 18px rgba(0,0,0,0.12);
+      padding:20px 24px; border:1px solid #dde2f0;
+    }
+    .card-title { font-size:18px; margin-bottom:10px; font-family:"Times New Roman", serif;}
+    .field-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px 18px; margin-top:8px;}
+    .field { display:flex; flex-direction:column; gap:4px; font-size:13px;}
+    .field label {font-size:12px; color:#5d6470;}
+    .field input { padding:6px 8px; border-radius:4px; border:1px solid #cfd3e0; font-size:13px;}
+    .btn-primary {
+      margin-top:12px; padding:8px 18px; border:none; border-radius:4px;
+      background:#003b8e; color:#fff; font-size:13px; cursor:pointer;
+    }
+    .status-msg { font-size:12px; margin-top:6px;}
+    .status-success { color:green;}
+    .status-error { color:red;}
+
+    footer {
+      background:#003b8e; color:#fff; font-size:12px; padding:14px 40px 18px;
+    }
+    .footer-title { font-weight:600; margin-bottom:4px;}
+    .footer-flex { display:flex; flex-direction:column; gap:2px;}
+    .footer-contact-row { display:flex; gap:8px; align-items:center;}
+    @media(max-width:860px){
+      main{padding:18px 16px 24px;}
+      .top-bar, .sub-bar, footer {padding-inline:16px;}
+      .layout{grid-template-columns:minmax(0,1fr);}
+    }
+    @media(max-width:640px){
+      .field-grid{grid-template-columns:minmax(0,1fr);}
+    }
+  </style>
+</head>
+<body>
+
+<header class="top-bar">
+  <div class="brand-left">
+    <div class="brand-title">LGU Paombong</div>
+    <div class="brand-subtitle">Human Resource Information System</div>
+  </div>
+  <nav class="top-nav">
+    <a href="{% url 'employeedash' %}">Home</a>
+    <a href="{% url 'employeedash' %}">Dashboard</a>
+    <a href="#">Contact us</a>
+  </nav>
+</header>
+
+<div class="sub-bar">
+  <div class="sub-left">
+    <div class="sub-logo">
+      <img src="{% static 'accounts/images/HRISLOGO.jpg' %}" alt="HRIS Seal">
+    </div>
+    <div class="sub-text">
+      <div class="sub-text-small">Human Resource Information</div>
+      <div class="sub-text-main">System of Paombong</div>
+    </div>
+  </div>
+  <div class="sub-right">
+    <span>
+      Welcome,
+      {% if employee %}
+        {{ employee.full_name }}!
+      {% else %}
+        {{ request.user.get_full_name|default:request.user.username }}!
+      {% endif %}
+    </span>
+    <div class="notif-icon">🔔</div>
+    <div class="user-circle">👤</div>
+    <button class="logout-btn" onclick="window.location.href='{% url 'employeelogin' %}'">
+      Logout
+    </button>
+  </div>
+</div>
+
+<main>
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="side-item" onclick="window.location.href='{% url 'employeedash' %}'">
+        <div class="side-item-icon">🏠</div><span>Dashboard</span>
+      </div>
+      <div class="side-item" onclick="window.location.href='{% url 'payslip' %}'">
+        <div class="side-item-icon">🧾</div><span>Payslip/Taxes</span>
+      </div>
+      <div class="side-item" onclick="window.location.href='{% url 'benefits' %}'">
+        <div class="side-item-icon">💼</div><span>Benefits</span>
+      </div>
+      <div class="side-item" onclick="window.location.href='{% url 'performance' %}'">
+        <div class="side-item-icon">📊</div><span>Performance</span>
+      </div>
+      <div class="side-item" onclick="window.location.href='{% url 'announcements' %}'">
+        <div class="side-item-icon">📣</div><span>Announcement/News</span>
+      </div>
+      <div class="side-item" onclick="window.location.href='{% url 'help' %}'">
+        <div class="side-item-icon">🆘</div><span>Help &amp; Support</span>
+      </div>
+      <div class="side-item active" onclick="window.location.href='{% url 'employee_profile' %}'">
+        <div class="side-item-icon">👤</div><span>My Profile</span>
+      </div>
+    </aside>
+
+    <!-- PROFILE CONTENT -->
+    <section class="profile-wrapper">
+      <!-- Personal Info Card -->
+      <div class="card">
+        <div class="card-title">Personal Information</div>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="info">
+          <div class="field-grid">
+            <div class="field">
+              <label>Employee ID</label>
+              <input type="text" value="{{ employee.emp_id }}" disabled>
+            </div>
+            <div class="field">
+              <label>Name</label>
+              <input type="text" value="{{ employee.full_name }}" disabled>
+            </div>
+            <div class="field">
+              <label>Phone</label>
+              <input type="text" name="phone" value="{{ employee.phone }}">
+            </div>
+            <div class="field">
+              <label>Street Address</label>
+              <input type="text" name="address" value="{{ employee.address }}">
+            </div>
+            <div class="field">
+              <label>Barangay</label>
+              <input type="text" name="brgy" value="{{ employee.brgy }}">
+            </div>
+            <div class="field">
+              <label>Municipality/City</label>
+              <input type="text" name="city" value="{{ employee.city }}">
+            </div>
+            <div class="field">
+              <label>Province</label>
+              <input type="text" name="province" value="{{ employee.province }}">
+            </div>
+            <div class="field">
+              <label>ZIP Code</label>
+              <input type="text" name="zipcode" value="{{ employee.zipcode }}">
+            </div>
+
+            <div class="field">
+              <label>Emergency Contact Name</label>
+              <input type="text" name="emc_name" value="{{ employee.emc_name }}">
+            </div>
+            <div class="field">
+              <label>Emergency Contact Relationship</label>
+              <input type="text" name="emc_relation" value="{{ employee.emc_relation }}">
+            </div>
+            <div class="field">
+              <label>Emergency Contact Phone</label>
+              <input type="text" name="emc_phone" value="{{ employee.emc_phone }}">
+            </div>
+          </div>
+          <button type="submit" class="btn-primary">Save Personal Info</button>
+          {% if info_success %}
+            <div class="status-msg status-success">Changes saved successfully.</div>
+          {% endif %}
+        </form>
+      </div>
+
+      <!-- Password Card -->
+      <div class="card">
+        <div class="card-title">Change Password</div>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="password">
+          <div class="field-grid">
+            <div class="field">
+              <label>Old Password</label>
+              <input type="password" name="old_password" required>
+            </div>
+            <div class="field">
+              <label>New Password</label>
+              <input type="password" name="new_password1" required>
+            </div>
+            <div class="field">
+              <label>Confirm New Password</label>
+              <input type="password" name="new_password2" required>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary">Update Password</button>
+          {% if pwd_success %}
+            <div class="status-msg status-success">Password changed successfully.</div>
+          {% endif %}
+          {% if pwd_error %}
+            <div class="status-msg status-error">{{ pwd_error }}</div>
+          {% endif %}
+        </form>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-title">Contact Us</div>
+  <div class="footer-flex">
+    <div>Email or phone us to learn how HRMO can solve your problems</div>
+    <div class="footer-contact-row">
+      <span>📞</span><span>(044) 760-4800</span>
+    </div>
+    <div class="footer-contact-row">
+      <span>📧</span><span>hrmpaombong2024@gmail.com</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

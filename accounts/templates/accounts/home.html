@@ -1,0 +1,417 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LGU Paombong HRIS – Portal Selection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --bg-page: #f7f7f7;
+      --card-bg: #ffffff;
+      --border-light: #dcdcdc;
+      --shadow-soft: 0 10px 22px rgba(0,0,0,0.08);
+      --text-main: #222;
+      --text-muted: #666;
+      --accent-dark: #000;
+      --accent-light: #f5f5f5;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      background: #ffffff;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    .header {
+      padding: 18px 40px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .header-top {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 980px;
+      margin-bottom: 8px;
+    }
+
+    .header-logo-circle {
+      width: 100px;
+      height: 100px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+    }
+
+    .header-logo-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .header-title-block {
+      text-align: center;
+      flex: 1;
+    }
+
+    .header-title {
+      font-size: 34px;
+      letter-spacing: 1px;
+    }
+
+    .header-subtitle {
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .header-divider {
+      border: none;
+      border-top: 1px solid #cfcfcf;
+      margin-top: 8px;
+      width: 100%;
+      max-width: 1080px;
+    }
+
+    /* INTRO TEXT */
+    .intro {
+      text-align: center;
+      margin: 20px auto 10px;
+      max-width: 720px;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .intro strong {
+      font-weight: 600;
+    }
+
+    /* MAIN PORTAL CARDS */
+    .portal-row {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      padding: 10px 40px 30px;
+      flex-wrap: wrap;
+    }
+
+    .portal-card {
+      width: 360px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-soft);
+      padding: 24px 26px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .portal-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 26px rgba(0,0,0,0.12);
+    }
+
+    .portal-icon-wrapper {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      background: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      font-size: 30px;
+    }
+
+    .portal-title {
+      font-size: 22px;
+      margin-bottom: 2px;
+    }
+
+    .portal-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .portal-list {
+      width: 100%;
+      list-style: none;
+      margin-bottom: 18px;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .portal-list li {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .portal-list-icon {
+      font-size: 14px;
+    }
+
+    .portal-button-wrapper {
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    .primary-btn,
+    .outline-btn {
+      width: 100%;
+      display: inline-block;
+      text-align: center;
+      padding: 8px 14px;
+      border-radius: 3px;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+    }
+
+    .primary-btn {
+      background: #000;
+      color: #fff;
+      border: 1px solid #000;
+    }
+
+    .primary-btn:hover {
+      background: #222;
+      transform: translateY(-1px);
+    }
+
+    .outline-btn {
+      background: #fff;
+      color: #000;
+      border: 1px solid #000;
+    }
+
+    .outline-btn:hover {
+      background: #000;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    /* SYSTEM FEATURES SECTION */
+    .features-section {
+      margin: 10px auto 20px;
+      max-width: 1080px;
+      border: 1px solid var(--border-light);
+      background: #fbfbfb;
+      padding: 18px 24px 20px;
+    }
+
+    .features-header {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .features-title {
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+
+    .features-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .features-row {
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-around;
+      gap: 24px;
+      flex-wrap: wrap;
+      font-size: 12px;
+    }
+
+    .feature-item {
+      flex: 1 1 200px;
+      text-align: center;
+      padding: 4px 10px;
+    }
+
+    .feature-icon {
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .feature-title {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .feature-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* FOOTER */
+    .footer-line {
+      border: none;
+      border-top: 1px solid #d3d3d3;
+      margin: 10px 40px 0;
+    }
+
+    .footer-text {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 10px 10px 18px;
+    }
+
+    @media (max-width: 900px) {
+      .header-top {
+        flex-direction: row;
+        justify-content: space-between;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .header {
+        padding-inline: 18px;
+      }
+      .portal-row {
+        padding-inline: 18px;
+      }
+      .features-section {
+        margin-inline: 18px;
+      }
+      .footer-line {
+        margin-inline: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-top">
+      <div class="header-logo-circle">
+        <img src="{% static 'accounts/images/paombongLogo.jpg' %}" alt="LGU Paombong Logo Left">
+      </div>
+
+      <div class="header-title-block">
+        <div class="header-title">LGU Paombong</div>
+        <div class="header-subtitle">Human Resource Information System</div>
+      </div>
+
+      <div class="header-logo-circle">
+        <img src="{% static 'accounts/images/HRISLOGO.jpg' %}" alt="HRMO Logo Right">
+      </div>
+    </div>
+
+    <hr class="header-divider">
+  </header>
+
+  <!-- INTRO TEXT -->
+  <section class="intro">
+    Welcome to the Municipal Hall HRIS Portal.<br>
+    Please select your access level to continue to the appropriate interface.
+  </section>
+
+  <!-- PORTAL CARDS -->
+  <section class="portal-row">
+    <!-- ADMIN PORTAL -->
+    <article class="portal-card">
+      <div class="portal-icon-wrapper">🛡️</div>
+      <h2 class="portal-title">Admin Portal</h2>
+      <div class="portal-subtitle">For HR Staff and Administrators</div>
+
+      <ul class="portal-list">
+        <li><span class="portal-list-icon">👥</span><span>Employee Management</span></li>
+        <li><span class="portal-list-icon">⏱</span><span>Time Tracking Dashboard</span></li>
+        <li><span class="portal-list-icon">✉</span><span>Employee Messages &amp; FAQ</span></li>
+      </ul>
+
+      <div class="portal-button-wrapper">
+        <!-- CONNECTED TO ADMIN LOGIN PAGE -->
+        <a href="{% url 'adminlogin'%}" class="primary-btn">Access Admin Portal</a>
+      </div>
+    </article>
+
+    <!-- EMPLOYEE PORTAL -->
+    <article class="portal-card">
+      <div class="portal-icon-wrapper">👤</div>
+      <h2 class="portal-title">Employee Portal</h2>
+      <div class="portal-subtitle">For Municipal Hall Employees</div>
+
+      <ul class="portal-list">
+        <li><span class="portal-list-icon">🧾</span><span>Personal Information Management</span></li>
+        <li><span class="portal-list-icon">❓</span><span>FAQ &amp; Help Center</span></li>
+        <li><span class="portal-list-icon">💬</span><span>Direct Messaging to HR</span></li>
+      </ul>
+
+      <div class="portal-button-wrapper">
+        <!-- CONNECTED TO EMPLOYEE LOGIN PAGE -->
+        <a href="{% url 'employeelogin'%}" class="outline-btn">Access Employee Portal</a>
+      </div>
+    </article>
+  </section>
+
+  <!-- SYSTEM FEATURES -->
+  <section class="features-section">
+    <div class="features-header">
+      <div class="features-title">System Features</div>
+      <div class="features-subtitle">
+        Comprehensive HRIS solution designed for municipal government operations
+      </div>
+    </div>
+
+    <div class="features-row">
+      <div class="feature-item">
+        <div class="feature-icon">👥</div>
+        <div class="feature-title">Employee Management</div>
+        <div class="feature-text">
+          Complete employee records, personal information, and organizational structure management.
+        </div>
+      </div>
+
+      <div class="feature-item">
+        <div class="feature-icon">⏱</div>
+        <div class="feature-title">Time Tracking</div>
+        <div class="feature-text">
+          Monitor work hours, attendance, and generate comprehensive time reports.
+        </div>
+      </div>
+
+      <div class="feature-item">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">Secure Communication</div>
+        <div class="feature-text">
+          Direct messaging system between employees and HR with FAQ management.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <hr class="footer-line">
+  <footer class="footer-text">
+    © 2025 Paombong Municipal Hall HRIS. Designed for professional government operations.
+  </footer>
+
+</body>
+</html>

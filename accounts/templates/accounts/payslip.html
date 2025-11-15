@@ -1,0 +1,543 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LGU Paombong – Payslip/Taxes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --blue-main: #003b8e;
+      --blue-dark: #1f2955;
+      --blue-footer: #003b8e;
+      --bg-page: #eef3ff;
+      --card-bg: #ffffff;
+      --card-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+      --text-main: #222222;
+      --text-muted: #5d6470;
+      --border-light: #dde2f0;
+      --radius-card: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: var(--blue-main);
+      color: #ffffff;
+      padding: 10px 40px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .brand-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-title {
+      font-family: "Times New Roman", serif;
+      font-size: 26px;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+    }
+
+    .top-nav {
+      display: flex;
+      gap: 24px;
+      font-size: 14px;
+      align-items: center;
+    }
+
+    .top-nav a {
+      color: #ffffff;
+      text-decoration: none;
+      position: relative;
+      padding-bottom: 2px;
+    }
+
+    .top-nav a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 0;
+      height: 2px;
+      background: #ffffff;
+      transition: width 0.2s ease;
+    }
+
+    .top-nav a:hover::after,
+    .top-nav a.active::after {
+      width: 100%;
+    }
+
+    .sub-bar {
+      background: var(--blue-dark);
+      color: #ffffff;
+      padding: 8px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sub-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .sub-logo {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #ffe700;
+      border: 3px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      text-align: center;
+      color: #000;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .sub-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .sub-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sub-text-small {
+      font-size: 11px;
+    }
+
+    .sub-text-main {
+      font-size: 18px;
+      font-style: italic;
+    }
+
+    .sub-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .notif-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid #ffc857;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      background: transparent;
+    }
+
+    .user-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .logout-btn {
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #00a0e3;
+      color: #ffffff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background: #0086c0;
+    }
+
+    main {
+      flex: 1;
+      padding: 24px 40px 40px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 22px;
+    }
+
+    .sidebar {
+      background: var(--card-bg);
+      border-radius: var(--radius-card);
+      box-shadow: var(--card-shadow);
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .side-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 17px;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .side-item-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: #f4f6fb;
+    }
+
+    .side-item:hover {
+      color: var(--blue-main);
+    }
+
+    .side-item:hover .side-item-icon {
+      background: #e4ebff;
+    }
+
+    .side-item.active {
+      font-weight: 600;
+      color: var(--blue-main);
+    }
+
+    .payslip-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: var(--card-shadow);
+      padding: 18px 22px;
+      border: 1px solid #e0e4f0;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-family: "Times New Roman", serif;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .payslip-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .payslip-header span {
+      display: block;
+    }
+
+    .label {
+      font-weight: 600;
+    }
+
+    .payslip-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .payslip-table th,
+    .payslip-table td {
+      padding: 8px 6px;
+      border-bottom: 1px solid #f0f0f5;
+    }
+
+    .payslip-table th {
+      text-align: left;
+      font-family: "Times New Roman", serif;
+      font-size: 15px;
+    }
+
+    .align-right {
+      text-align: right;
+    }
+
+    .totals-row {
+      font-weight: 600;
+      border-top: 1px solid #dde2f0;
+    }
+
+    .note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    footer {
+      background: var(--blue-footer);
+      color: #ffffff;
+      padding: 14px 40px 18px;
+      font-size: 12px;
+    }
+
+    .footer-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .footer-flex {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .footer-contact-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-contact-row span:first-child {
+      font-size: 16px;
+    }
+
+    @media (max-width: 1024px) {
+      .layout {
+        grid-template-columns: 230px minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      main {
+        padding: 18px 16px 24px;
+      }
+      .top-bar,
+      .sub-bar,
+      footer {
+        padding-inline: 16px;
+      }
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="brand-left">
+      <div class="brand-title">LGU Paombong</div>
+      <div class="brand-subtitle">Human Resource Information System</div>
+    </div>
+
+    <nav class="top-nav">
+      <a href="{% url 'employeedash'%}">Home</a>
+      <a href="{% url 'employeedash'%}">Dashboard</a>
+      <a href="#">Contact us</a>
+    </nav>
+  </header>
+
+  <div class="sub-bar">
+    <div class="sub-left">
+      <div class="sub-logo">
+        <img src="{% static 'accounts/images/HRISLOGO.jpg' %}" alt="HRIS Seal">
+      </div>
+      <div class="sub-text">
+        <div class="sub-text-small">Human Resource Information</div>
+        <div class="sub-text-main">System of Paombong</div>
+      </div>
+    </div>
+
+    <div class="sub-right">
+      <span>
+        Welcome,
+        {% if employee %}
+          {{ employee.full_name }}!
+        {% else %}
+          {{ request.user.get_full_name|default:request.user.username }}!
+        {% endif %}
+      </span>
+      <div class="notif-icon">🔔</div>
+      <div class="user-circle" onclick="window.location.href='{% url 'employee_profile' %}'">
+        👤
+      </div>
+      <button class="logout-btn" onclick="window.location.href='{% url 'employeelogin' %}'">
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <main>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="side-item" onclick="window.location.href='{% url 'employeedash' %}'">
+          <div class="side-item-icon">🏠</div>
+          <span>Dashboard</span>
+        </div>
+
+        <div class="side-item active" onclick="window.location.href='{% url 'payslip' %}'">
+          <div class="side-item-icon">🧾</div>
+          <span>Payslip/Taxes</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'benefits' %}'">
+          <div class="side-item-icon">💼</div>
+          <span>Benefits</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'performance' %}'">
+          <div class="side-item-icon">📊</div>
+          <span>Performance</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'announcements' %}'">
+          <div class="side-item-icon">📣</div>
+          <span>Announcement/News</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'help' %}'">
+          <div class="side-item-icon">🆘</div>
+          <span>Help &amp; Support</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'employee_profile' %}'">
+          <div class="side-item-icon">👤</div>
+          <span>My Profile</span>
+        </div>
+      </aside>
+
+      <section class="payslip-wrapper">
+        <article class="card">
+          <h2 class="card-title">Payslip Summary</h2>
+
+          <div class="payslip-header">
+            <div>
+              <span><span class="label">Employee Name:</span>
+                {% if employee %}{{ employee.full_name }}{% else %}Juan Dela Cruz{% endif %}
+              </span>
+              <span><span class="label">Employee ID:</span>
+                {% if employee %}{{ employee.emp_id }}{% else %}EMP-00123{% endif %}
+              </span>
+              <span><span class="label">Department:</span>
+                {% if employee %}{{ employee.dept }}{% else %}HRMO{% endif %}
+              </span>
+            </div>
+            <div>
+              <span><span class="label">Pay Period:</span> October 01–15, 2025</span>
+              <span><span class="label">Pay Date:</span> October 16, 2025</span>
+            </div>
+          </div>
+
+          <table class="payslip-table">
+            <thead>
+              <tr>
+                <th>Earnings</th>
+                <th class="align-right">Amount (₱)</th>
+                <th>Deductions</th>
+                <th class="align-right">Amount (₱)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Basic Salary</td>
+                <td class="align-right">25,000.00</td>
+                <td>Withholding Tax</td>
+                <td class="align-right">2,000.00</td>
+              </tr>
+              <tr>
+                <td>Allowance</td>
+                <td class="align-right">2,000.00</td>
+                <td>GSIS</td>
+                <td class="align-right">1,500.00</td>
+              </tr>
+              <tr>
+                <td>Overtime Pay</td>
+                <td class="align-right">1,200.00</td>
+                <td>PhilHealth</td>
+                <td class="align-right">400.00</td>
+              </tr>
+              <tr>
+                <td>Other Earnings</td>
+                <td class="align-right">500.00</td>
+                <td>Pag-IBIG</td>
+                <td class="align-right">300.00</td>
+              </tr>
+              <tr class="totals-row">
+                <td>Total Earnings</td>
+                <td class="align-right">28,700.00</td>
+                <td>Total Deductions</td>
+                <td class="align-right">4,200.00</td>
+              </tr>
+              <tr class="totals-row">
+                <td>Net Pay</td>
+                <td class="align-right">24,500.00</td>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            This payslip layout is for reference only. Actual figures will depend on the official payroll computation of LGU Paombong.
+          </div>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-title">Contact Us</div>
+    <div class="footer-flex">
+      <div>Email or phone us to learn how HRMO can solve your problems</div>
+      <div class="footer-contact-row">
+        <span>📞</span>
+        <span>(044) 760-4800</span>
+      </div>
+      <div class="footer-contact-row">
+        <span>📧</span>
+        <span>hrmpaombong2024@gmail.com</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

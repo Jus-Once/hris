@@ -1,0 +1,639 @@
+{% load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LGU Paombong – HRIS Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --blue-main: #003b8e;
+      --blue-dark: #1f2955;
+      --blue-footer: #003b8e;
+      --bg-page: #eef3ff;
+      --card-bg: #ffffff;
+      --card-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+      --text-main: #222222;
+      --text-muted: #5d6470;
+      --accent-green: #00c28a;
+      --accent-green-hover: #00a876;
+      --border-light: #dde2f0;
+      --radius-card: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TOP NAV BAR */
+
+    .top-bar {
+      background: var(--blue-main);
+      color: #ffffff;
+      padding: 10px 40px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .brand-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-title {
+      font-family: "Times New Roman", serif;
+      font-size: 26px;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+    }
+
+    .top-nav {
+      display: flex;
+      gap: 24px;
+      font-size: 14px;
+      align-items: center;
+    }
+
+    .top-nav a {
+      color: #ffffff;
+      text-decoration: none;
+      position: relative;
+      padding-bottom: 2px;
+    }
+
+    .top-nav a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 0;
+      height: 2px;
+      background: #ffffff;
+      transition: width 0.2s ease;
+    }
+
+    .top-nav a:hover::after {
+      width: 100%;
+    }
+
+    /* SECONDARY HEADER */
+
+    .sub-bar {
+      background: var(--blue-dark);
+      color: #ffffff;
+      padding: 8px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sub-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .sub-logo {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #ffe700;
+      border: 3px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      text-align: center;
+      color: #000;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .sub-logo img {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      border-radius:50%;
+    }
+
+    .sub-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sub-text-small {
+      font-size: 11px;
+    }
+
+    .sub-text-main {
+      font-size: 18px;
+      font-style: italic;
+    }
+
+    .sub-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .notif-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid #ffc857;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      background: transparent;
+    }
+
+    .user-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .logout-btn {
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #00a0e3;
+      color: #ffffff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background: #0086c0;
+    }
+
+    /* MAIN LAYOUT */
+
+    main {
+      flex: 1;
+      padding: 24px 40px 40px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 22px;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      background: var(--card-bg);
+      border-radius: var(--radius-card);
+      box-shadow: var(--card-shadow);
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .side-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 17px;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .side-item-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: #f4f6fb;
+    }
+
+    .side-item:hover {
+      color: var(--blue-main);
+    }
+
+    .side-item:hover .side-item-icon {
+      background: #e4ebff;
+    }
+
+    .side-item.active {
+      font-weight: 600;
+      color: var(--blue-main);
+    }
+
+    /* MAIN CARDS GRID */
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-card);
+      box-shadow: var(--card-shadow);
+      padding: 18px 22px;
+    }
+
+    .card-title {
+      font-size: 17px;
+      margin-bottom: 12px;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* QUICK ACTIONS */
+
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .action-btn {
+      border-radius: 999px;
+      padding: 8px 8px;
+      border: none;
+      background: var(--accent-green);
+      color: #ffffff;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 150, 110, 0.4);
+    }
+
+    .action-btn:hover {
+      background: var(--accent-green-hover);
+      transform: translateY(-1px);
+    }
+
+    /* LIST STYLING FOR EVENTS/ANNOUNCEMENTS */
+
+    .card-list {
+      list-style: none;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .card-list li + li {
+      margin-top: 6px;
+    }
+
+    /* LEAVE OVERVIEW */
+
+    .leave-item + .leave-item {
+      margin-top: 4px;
+    }
+
+    .leave-item span {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* TIME CARD */
+
+    .time-card {
+      grid-column: 1 / span 2;
+      max-width: 520px;
+      justify-self: center;
+      border-radius: 14px;
+      border: 1px solid var(--border-light);
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      column-gap: 18px;
+      align-items: center;
+    }
+
+    .time-icon-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .time-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: 3px solid #b9beca;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 30px;
+      color: #b9beca;
+    }
+
+    .time-text-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .time-rows {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* FOOTER */
+
+    footer {
+      background: var(--blue-footer);
+      color: #ffffff;
+      padding: 14px 40px 18px;
+      font-size: 12px;
+    }
+
+    .footer-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .footer-flex {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .footer-contact-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-contact-row span:first-child {
+      font-size: 16px;
+    }
+
+    /* RESPONSIVE */
+
+    @media (max-width: 1024px) {
+      .layout {
+        grid-template-columns: 230px minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 860px) {
+      main {
+        padding: 18px 16px 24px;
+      }
+      .top-bar,
+      .sub-bar,
+      footer {
+        padding-inline: 16px;
+      }
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .main-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .time-card {
+        grid-column: auto;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- TOP BAR -->
+  <header class="top-bar">
+    <div class="brand-left">
+      <div class="brand-title">LGU Paombong</div>
+      <div class="brand-subtitle">Human Resource Information System</div>
+    </div>
+
+    <nav class="top-nav">
+      <a href="{% url 'employeedash'%}">Home</a>
+      <a href="{% url 'employeedash'%}">Dashboard</a>
+      <a href="#">Contact us</a>
+    </nav>
+  </header>
+
+  <!-- SECONDARY HEADER -->
+  <div class="sub-bar">
+    <div class="sub-left">
+      <div class="sub-logo">
+         <img src="{% static 'accounts/images/HRISLOGO.jpg' %}" alt="HRIS Seal">
+      </div>
+      <div class="sub-text">
+        <div class="sub-text-small">Human Resource Information</div>
+        <div class="sub-text-main">System of Paombong</div>
+      </div>
+    </div>
+
+    <div class="sub-right">
+      <span>
+        Welcome,
+        {% if employee %}
+          {{ employee.full_name }}!
+        {% else %}
+          {{ request.user.get_full_name|default:request.user.username }}!
+        {% endif %}
+      </span>
+      <div class="notif-icon">🔔</div>
+      <div class="user-circle">👤</div>
+      <button class="logout-btn" onclick="window.location.href='{% url 'employeelogin' %}'">
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <div class="layout">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="side-item active" onclick="window.location.href='{% url 'employeedash' %}'">
+          <div class="side-item-icon">🏠</div>
+          <span>Dashboard</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'payslip' %}'">
+          <div class="side-item-icon">🧾</div>
+          <span>Payslip/Taxes</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'benefits' %}'">
+          <div class="side-item-icon">💼</div>
+          <span>Benefits</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'performance' %}'">
+          <div class="side-item-icon">📊</div>
+          <span>Performance</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'announcements' %}'">
+          <div class="side-item-icon">📣</div>
+          <span>Announcement/News</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'help' %}'">
+          <div class="side-item-icon">🆘</div>
+          <span>Help &amp; Support</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'employee_profile' %}'">
+          <div class="side-item-icon">👤</div>
+          <span>My Profile</span>
+        </div>
+      </aside>
+
+      <!-- MAIN GRID CARDS -->
+      <section class="main-grid">
+        <!-- Quick Actions -->
+        <article class="card">
+          <h2 class="card-title">Quick Actions</h2>
+          <div class="actions-grid">
+            <button class="action-btn" onclick="window.location.href='{% url 'help' %}'">Request Leave</button>
+            <button class="action-btn" onclick="window.location.href='{% url 'payslip' %}'">View Payslip</button>
+            <button class="action-btn" onclick="window.location.href='{% url 'employee_profile' %}'">Update Profile</button>
+            <button class="action-btn" onclick="window.location.href='{% url 'help' %}'">Attendance Help</button>
+          </div>
+        </article>
+
+        <!-- Upcoming Events -->
+        <article class="card">
+          <h2 class="card-title">Upcoming Events/Deadlines</h2>
+          <ul class="card-list">
+            <li>Family Day : September 26, 2025</li>
+            <li>Disaster coordination: Oct 6, 2025</li>
+            <li>Livelihood program launches: Oct 20, 2025</li>
+          </ul>
+        </article>
+
+        <!-- Leave Overview (sample numbers; real leave model not yet implemented) -->
+        <article class="card">
+          <h2 class="card-title">Leave Overview</h2>
+          <div class="leave-item">
+            <span>Annual Leave Remaining :</span> 15 days
+          </div>
+          <div class="leave-item">
+            <span>Sick Leave Remaining :</span> 8 days
+          </div>
+          <div class="leave-item">
+            <span>Pending Leave Requests :</span> 2
+          </div>
+        </article>
+
+        <!-- Latest Announcements -->
+        <article class="card">
+          <h2 class="card-title">Latest Announcements</h2>
+          <ul class="card-list">
+            {% if announcements %}
+              {% for a in announcements %}
+                <li>
+                  {{ a.title }}
+                  {% if a.date %} – {{ a.date|date:"M d, Y" }}{% endif %}
+                </li>
+              {% endfor %}
+            {% else %}
+              <li>No announcements at the moment.</li>
+            {% endif %}
+          </ul>
+        </article>
+
+        <!-- Time Card -->
+        <article class="card time-card">
+          <div class="time-icon-wrap">
+            <div class="time-icon">🕒</div>
+          </div>
+          <div>
+            <div class="time-text-title">Today's Time</div>
+            <div class="time-rows">
+              <span>
+                Time In:
+                {% if today_attendance and today_attendance.time_in %}
+                  {{ today_attendance.time_in }}
+                {% else %}
+                  -
+                {% endif %}
+              </span>
+              <span>
+                Total Hours:
+                {% if today_attendance and today_attendance.hours_worked %}
+                  {{ today_attendance.hours_worked }}
+                {% else %}
+                  -
+                {% endif %}
+              </span>
+            </div>
+            <div class="time-rows" style="margin-top: 8px">
+              <span>
+                Time Out:
+                {% if today_attendance and today_attendance.time_out %}
+                  {{ today_attendance.time_out }}
+                {% else %}
+                  -
+                {% endif %}
+              </span>
+              <span>
+                Status:
+                {% if today_attendance %}
+                  {{ today_attendance.get_status_display }}
+                {% else %}
+                  -
+                {% endif %}
+              </span>
+            </div>
+          </div>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-title">Contact Us</div>
+    <div class="footer-flex">
+      <div>Email or phone us to learn how HRMO can solve your problems:</div>
+      <div class="footer-contact-row">
+        <span>📞</span>
+        <span>(044) 760-4800</span>
+      </div>
+      <div class="footer-contact-row">
+        <span>📧</span>
+        <span>hrmpaombong2024@gmail.com</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

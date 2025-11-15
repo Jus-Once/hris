@@ -1,0 +1,639 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LGU Paombong – Time Tracking Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg-page: #f5f5fa;
+      --card-bg: #ffffff;
+      --card-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+      --border-light: #e1e1e8;
+      --blue-main: #003b8e;
+      --text-main: #222222;
+      --text-muted: #666666;
+      --accent: #111111;
+      --accent-soft: #f2f2f2;
+      --logout-bg: #f0f0f0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    .header {
+      padding: 12px 40px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+    }
+
+    .logo-text-main {
+      font-size: 30px;
+    }
+
+    .logo-text-sub {
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .user-outline {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid #000000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+    }
+
+    .header-divider {
+      border: none;
+      border-top: 1px solid var(--border-light);
+      margin: 0 40px;
+    }
+
+    /* TOP NAV TABS */
+    .tab-bar {
+      padding: 10px 40px 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+    }
+
+    .tabs-left {
+      display: flex;
+      gap: 24px;
+      font-size: 16px;
+    }
+
+    .tab-link {
+      position: relative;
+      padding-bottom: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-link span.icon {
+      font-size: 18px;
+    }
+
+    .tab-link.active {
+      font-weight: 600;
+    }
+
+    .tab-link.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 2px;
+      background: #000000;
+    }
+
+    .logout-btn {
+      padding: 6px 20px;
+      background: var(--logout-bg);
+      border-radius: 999px;
+      border: 1px solid #cccccc;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .tab-underline {
+      border: none;
+      border-top: 1px solid var(--border-light);
+      margin: 0 40px 16px;
+    }
+
+    /* MAIN LAYOUT */
+    main {
+      flex: 1;
+      padding: 0 40px 40px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .top-row {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 4px;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border-light);
+    }
+
+    .card-inner {
+      padding: 18px 22px;
+    }
+
+    .card-header {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-header-icon {
+      font-size: 16px;
+    }
+
+    /* Today's Summary */
+    .summary-list {
+      font-size: 13px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #eeeeee;
+    }
+
+    .summary-row:last-child {
+      border-bottom: none;
+    }
+
+    .summary-label {
+      color: var(--text-muted);
+    }
+
+    .summary-value {
+      font-weight: 500;
+    }
+
+    /* Recent Time Logs */
+    .logs-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .log-item {
+      border: 1px solid #e3e3e3;
+      padding: 8px 10px;
+      display: grid;
+      grid-template-columns: 1.7fr 1fr 0.8fr;
+      align-items: center;
+      gap: 6px;
+      background: #fafafa;
+      transition: background 0.15s ease, transform 0.12s ease,
+        box-shadow 0.12s ease;
+    }
+
+    .log-item:hover {
+      background: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .log-name {
+      font-weight: 600;
+    }
+
+    .log-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .log-hours {
+      text-align: right;
+      font-size: 12px;
+    }
+
+    .log-badge {
+      text-align: center;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 2px;
+      border: 1px solid #000;
+      background: #000;
+      color: #fff;
+    }
+
+    .log-badge.leave {
+      background: #ffffff;
+      color: #000;
+    }
+
+    /* Time Tracking Details */
+    .details-card {
+      margin-top: 10px;
+    }
+
+    .details-header-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 0.6fr;
+      gap: 14px;
+      align-items: flex-end;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .field-input,
+    .field-select {
+      padding: 7px 10px;
+      border-radius: 4px;
+      border: 1px solid #cfcfcf;
+      font-size: 12px;
+      background: #ffffff;
+    }
+
+    .field-input:focus,
+    .field-select:focus {
+      outline: none;
+      border-color: #000;
+    }
+
+    .btn-generate {
+      padding: 8px 16px;
+      border-radius: 4px;
+      border: 1px solid #000;
+      background: #000;
+      color: #ffffff;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.12s ease,
+        box-shadow 0.12s ease;
+    }
+
+    .btn-generate:hover {
+      background: #111;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    /* LOGOUT MODAL */
+    .logout-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(6px);
+      background: rgba(255, 255, 255, 0.3);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .logout-modal {
+      background: white;
+      padding: 25px 35px;
+      border-radius: 18px;
+      border: 2px solid #000;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      font-size: 20px;
+    }
+
+    .logout-modal .logout-yes {
+      background: #0048ff;
+      color: white;
+      padding: 6px 20px;
+      border-radius: 10px;
+      border: 2px solid #000;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    .logout-modal .logout-no {
+      background: white;
+      padding: 6px 18px;
+      margin-left: 10px;
+      border-radius: 10px;
+      border: 2px solid #000;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #222;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: 0.25s;
+      z-index: 1200;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 1000px) {
+      main {
+        padding-inline: 20px;
+      }
+      .header,
+      .tab-bar {
+        padding-inline: 20px;
+      }
+      .header-divider,
+      .tab-underline {
+        margin-inline: 20px;
+      }
+
+      .top-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <img src="{% static 'accounts/images/paombongLogo.jpg' %}" alt="LGU Paombong Logo" class="logo-img" />
+      <div>
+        <div class="logo-text-main">LGU Paombong</div>
+        <div class="logo-text-sub">Human Resource Information System</div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="user-outline">👤</div>
+    </div>
+  </header>
+
+  <hr class="header-divider" />
+
+  <!-- NAV TABS -->
+  <div class="tab-bar">
+    <div class="tabs-left">
+      <div class="tab-link" data-href="{% url 'admindash'%}">
+        <span class="icon">▦</span>
+        <span>Dashboard</span>
+      </div>
+      <div class="tab-link" data-href="{% url 'adminemployee'%}">
+        <span class="icon">👥</span>
+        <span>Employees</span>
+      </div>
+      <div class="tab-link active" data-href="{% url 'time'%}">
+        <span class="icon">⏱</span>
+        <span>Time Tracking</span>
+      </div>
+      <div class="tab-link" data-href="{% url 'message'%}">
+        <span class="icon">✉</span>
+        <span>Messages</span>
+      </div>
+    </div>
+
+    <button class="logout-btn">Logout</button>
+  </div>
+
+  <hr class="tab-underline" />
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <h1 class="page-title">Time Tracking Dashboard</h1>
+
+    <div class="top-row">
+      <!-- Today's Summary -->
+      <section class="card">
+        <div class="card-inner">
+          <div class="card-header">
+            <span class="card-header-icon">📅</span>
+            <span>Today's Summary</span>
+          </div>
+          <div class="summary-list">
+            <div class="summary-row">
+              <span class="summary-label">Present:</span>
+              <span class="summary-value">{{ today_present }} employees</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">On Leave:</span>
+              <span class="summary-value">{{ today_on_leave }} employees</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Late:</span>
+              <span class="summary-value">{{ today_late }} employees</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Average Hours:</span>
+              <span class="summary-value">
+                {% if today_avg_hours %}{{ today_avg_hours }}{% else %}0{% endif %} Hours
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Time Logs -->
+      <section class="card">
+        <div class="card-inner">
+          <div class="card-header">
+            <span class="card-header-icon">🕒</span>
+            <span>Recent Time Logs</span>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+            Latest employee check-ins and check-outs
+          </p>
+
+          <div class="logs-wrapper">
+            {% for log in recent_logs %}
+              <div class="log-item">
+                <div>
+                  <div class="log-name">
+                    {{ log.employee.fname }} {{ log.employee.lname }}
+                  </div>
+                  <div class="log-sub">
+                    Last activity:
+                    {% if log.time_out %}
+                      {{ log.time_out }}
+                    {% elif log.time_in %}
+                      {{ log.time_in }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="log-hours">
+                  {% if log.hours_worked %}{{ log.hours_worked }}{% else %}—{% endif %} hrs
+                </div>
+                <div class="log-badge {% if log.status in 'fieldwork health' %}leave{% endif %}">
+                  {{ log.get_status_display }}
+                </div>
+              </div>
+            {% empty %}
+              <p style="font-size:12px;color:var(--text-muted);">
+                No time logs yet.
+              </p>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Time Tracking Details -->
+    <section class="card details-card">
+      <div class="card-inner">
+        <div class="card-header">
+          <span class="card-header-icon">📊</span>
+          <span>Time Tracking Details</span>
+        </div>
+        <div class="details-header-sub">
+          View and manage employee work hours
+        </div>
+
+        <div class="details-grid">
+          <div class="field-group">
+            <label class="field-label" for="dateRange">Date</label>
+            <input
+              id="dateRange"
+              type="date"
+              class="field-input"
+            />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="employeeSelect">Employee</label>
+            <select id="employeeSelect" class="field-select">
+              <option>All Employees</option>
+              <!-- You can later render real employees here if you want -->
+            </select>
+          </div>
+
+          <div class="field-group">
+            <button class="btn-generate" id="generateBtn">
+              Generate report
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- LOGOUT MODAL -->
+  <div class="logout-backdrop" id="logoutBackdrop">
+    <div class="logout-modal">
+      <p>Are you sure you want to<br />logout?</p>
+      <br />
+      <button class="logout-yes" onclick="confirmLogout()">Logout</button>
+      <button class="logout-no" onclick="closeLogoutModal()">No</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">Report generated.</div>
+
+  <script>
+    // Logout handling
+    const logoutBtn = document.querySelector(".logout-btn");
+    const logoutBackdrop = document.getElementById("logoutBackdrop");
+
+    logoutBtn.addEventListener("click", () => {
+      logoutBackdrop.style.display = "flex";
+    });
+
+    function closeLogoutModal() {
+      logoutBackdrop.style.display = "none";
+    }
+
+    function confirmLogout() {
+      window.location.href = "{% url 'adminlogout'%}";
+    }
+
+    // Nav tabs linking
+    document.querySelectorAll(".tab-link").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const target = tab.getAttribute("data-href");
+        if (target && !tab.classList.contains("active")) {
+          window.location.href = target;
+        }
+      });
+    });
+
+    // Demo "Generate report" toast
+    const generateBtn = document.getElementById("generateBtn");
+    const toast = document.getElementById("toast");
+
+    generateBtn.addEventListener("click", () => {
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2200);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LGU Paombong – Benefits</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --blue-main: #003b8e;
+      --blue-dark: #1f2955;
+      --blue-footer: #003b8e;
+      --bg-page: #eef3ff;
+      --card-bg: #ffffff;
+      --card-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+      --text-main: #222222;
+      --text-muted: #5d6470;
+      --border-light: #dde2f0;
+      --radius-card: 8px;
+      --pill-bg: #e7f2ff;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: var(--blue-main);
+      color: #ffffff;
+      padding: 10px 40px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .brand-left { display:flex; flex-direction:column; gap:2px; }
+    .brand-title { font-family:"Times New Roman", serif; font-size:26px; }
+    .brand-subtitle { font-size:13px; }
+
+    .top-nav { display:flex; gap:24px; font-size:14px; align-items:center; }
+    .top-nav a {
+      color:#fff; text-decoration:none; position:relative; padding-bottom:2px;
+    }
+    .top-nav a::after {
+      content:""; position:absolute; left:0; bottom:0; width:0; height:2px;
+      background:#fff; transition:width .2s;
+    }
+    .top-nav a:hover::after,
+    .top-nav a.active::after { width:100%; }
+
+    .sub-bar {
+      background: var(--blue-dark);
+      color:#fff;
+      padding:8px 40px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .sub-left { display:flex; align-items:center; gap:15px; }
+    .sub-logo {
+      width:70px; height:70px; border-radius:50%;
+      background:#ffe700; border:3px solid #fff;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 4px 8px rgba(0,0,0,0.3);
+      overflow:hidden;
+    }
+    .sub-logo img {
+      width:100%; height:100%; object-fit:cover; border-radius:50%;
+    }
+    .sub-text { display:flex; flex-direction:column; gap:2px; }
+    .sub-text-small { font-size:11px; }
+    .sub-text-main { font-size:18px; font-style:italic; }
+
+    .sub-right {
+      display:flex; align-items:center; gap:16px; font-size:13px;
+    }
+    .notif-icon {
+      width:30px; height:30px; border-radius:50%;
+      border:2px solid #ffc857;
+      display:flex; align-items:center; justify-content:center;
+      font-size:16px; background:transparent;
+    }
+    .user-circle {
+      width:38px; height:38px; border-radius:50%;
+      border:2px solid #fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px; cursor:pointer;
+    }
+    .logout-btn {
+      padding:6px 16px; border-radius:999px; border:none;
+      background:#00a0e3; color:#fff; font-size:13px; cursor:pointer;
+    }
+    .logout-btn:hover { background:#0086c0; }
+
+    main { flex:1; padding:24px 40px 40px; }
+
+    .layout {
+      display:grid;
+      grid-template-columns:260px minmax(0,1fr);
+      gap:22px;
+    }
+
+    .sidebar {
+      background:#fff;
+      border-radius:var(--radius-card);
+      box-shadow:var(--card-shadow);
+      padding:24px 18px;
+      display:flex;
+      flex-direction:column;
+      gap:22px;
+    }
+
+    .side-item {
+      display:flex; align-items:center; gap:16px;
+      font-size:17px; color:var(--text-main); cursor:pointer;
+    }
+    .side-item-icon {
+      width:30px; height:30px; border-radius:6px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px; background:#f4f6fb;
+    }
+    .side-item:hover { color:var(--blue-main); }
+    .side-item:hover .side-item-icon { background:#e4ebff; }
+    .side-item.active { font-weight:600; color:var(--blue-main); }
+
+    .benefits-wrapper {
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .card {
+      background:#fff;
+      border-radius:18px;
+      box-shadow:var(--card-shadow);
+      padding:18px 22px;
+      border:1px solid #e0e4f0;
+    }
+
+    .card-title {
+      font-size:18px;
+      font-family:"Times New Roman", serif;
+      margin-bottom:10px;
+      text-align:center;
+    }
+
+    .benefit-group-title {
+      font-weight:600;
+      margin-top:8px;
+      margin-bottom:6px;
+    }
+
+    .benefit-list {
+      font-size:13px;
+      color:var(--text-main);
+    }
+
+    .benefit-list li + li {
+      margin-top:4px;
+    }
+
+    .tag-row {
+      margin-top:10px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      font-size:11px;
+    }
+
+    .tag-pill {
+      padding:4px 8px;
+      border-radius:999px;
+      background:var(--pill-bg);
+      border:1px solid var(--border-light);
+    }
+
+    footer {
+      background:var(--blue-footer);
+      color:#fff;
+      padding:14px 40px 18px;
+      font-size:12px;
+    }
+    .footer-title { font-weight:600; margin-bottom:4px; }
+    .footer-flex { display:flex; flex-direction:column; gap:2px; }
+    .footer-contact-row { display:flex; align-items:center; gap:8px; }
+    .footer-contact-row span:first-child { font-size:16px; }
+
+    @media(max-width:1024px){
+      .layout{ grid-template-columns:230px minmax(0,1fr);}
+    }
+    @media(max-width:900px){
+      main{padding:18px 16px 24px;}
+      .top-bar,.sub-bar,footer{padding-inline:16px;}
+      .layout{grid-template-columns:minmax(0,1fr);}
+    }
+  </style>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="brand-left">
+      <div class="brand-title">LGU Paombong</div>
+      <div class="brand-subtitle">Human Resource Information System</div>
+    </div>
+
+    <nav class="top-nav">
+      <a href="{% url 'employeedash'%}">Home</a>
+      <a href="{% url 'employeedash'%}">Dashboard</a>
+      <a href="#">Contact us</a>
+    </nav>
+  </header>
+
+  <div class="sub-bar">
+    <div class="sub-left">
+      <div class="sub-logo">
+        <img src="{% static 'accounts/images/HRISLOGO.jpg' %}" alt="HRIS Seal">
+      </div>
+      <div class="sub-text">
+        <div class="sub-text-small">Human Resource Information</div>
+        <div class="sub-text-main">System of Paombong</div>
+      </div>
+    </div>
+
+    <div class="sub-right">
+      <span>
+        Welcome,
+        {% if employee %}
+          {{ employee.full_name }}!
+        {% else %}
+          {{ request.user.get_full_name|default:request.user.username }}!
+        {% endif %}
+      </span>
+      <div class="notif-icon">🔔</div>
+      <div class="user-circle" onclick="window.location.href='{% url 'employee_profile' %}'">
+        👤
+      </div>
+      <button class="logout-btn" onclick="window.location.href='{% url 'employeelogin' %}'">
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <main>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="side-item" onclick="window.location.href='{% url 'employeedash' %}'">
+          <div class="side-item-icon">🏠</div>
+          <span>Dashboard</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'payslip' %}'">
+          <div class="side-item-icon">🧾</div>
+          <span>Payslip/Taxes</span>
+        </div>
+
+        <div class="side-item active" onclick="window.location.href='{% url 'benefits' %}'">
+          <div class="side-item-icon">💼</div>
+          <span>Benefits</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'performance' %}'">
+          <div class="side-item-icon">📊</div>
+          <span>Performance</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'announcements' %}'">
+          <div class="side-item-icon">📣</div>
+          <span>Announcement/News</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'help' %}'">
+          <div class="side-item-icon">🆘</div>
+          <span>Help &amp; Support</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'employee_profile' %}'">
+          <div class="side-item-icon">👤</div>
+          <span>My Profile</span>
+        </div>
+      </aside>
+
+      <section class="benefits-wrapper">
+        <article class="card">
+          <h2 class="card-title">Government-Mandated Benefits</h2>
+          <ul class="benefit-list">
+            <li><span class="benefit-group-title">GSIS</span></li>
+            <li>• Retirement benefits according to years of service and salary grade.</li>
+            <li>• Life insurance and survivorship benefits for qualified beneficiaries.</li>
+            <li>• Optional loans (policy loan, salary loan) subject to GSIS guidelines.</li>
+          </ul>
+          <br>
+          <ul class="benefit-list">
+            <li><span class="benefit-group-title">PhilHealth</span></li>
+            <li>• Inpatient and outpatient benefits in accredited hospitals and clinics.</li>
+            <li>• Primary care benefits and preventive health services.</li>
+          </ul>
+          <br>
+          <ul class="benefit-list">
+            <li><span class="benefit-group-title">Pag-IBIG Fund</span></li>
+            <li>• Savings program with dividends credited to your Pag-IBIG account.</li>
+            <li>• Multi-purpose loan and calamity loan privileges.</li>
+            <li>• Access to housing loan facilities, subject to eligibility.</li>
+          </ul>
+
+          <div class="tag-row">
+            <div class="tag-pill">GSIS</div>
+            <div class="tag-pill">PhilHealth</div>
+            <div class="tag-pill">Pag-IBIG</div>
+            <div class="tag-pill">Government Benefits</div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2 class="card-title">LGU / Local HRMO Programs</h2>
+          <ul class="benefit-list">
+            <li><span class="benefit-group-title">Leave Benefits</span></li>
+            <li>• Vacation and sick leaves as per Civil Service and LGU policies.</li>
+            <li>• Special leave benefits (e.g., maternity, paternity, solo parent) if applicable.</li>
+          </ul>
+          <br>
+          <ul class="benefit-list">
+            <li><span class="benefit-group-title">Health & Wellness</span></li>
+            <li>• Participation in health and wellness activities scheduled by HRMO.</li>
+            <li>• Free or subsidized annual physical examinations when available.</li>
+          </ul>
+          <br>
+          <ul class="benefit-list">
+            <li><span class="benefit-group-title">Training & Development</span></li>
+            <li>• Attendance to seminars, workshops, and training relevant to your role.</li>
+            <li>• Skills enhancement activities coordinated with department heads.</li>
+          </ul>
+
+          <div class="tag-row">
+            <div class="tag-pill">Leave Benefits</div>
+            <div class="tag-pill">Training</div>
+            <div class="tag-pill">Health & Wellness</div>
+          </div>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-title">Contact Us</div>
+    <div class="footer-flex">
+      <div>Email or phone us to learn how HRMO can solve your problems</div>
+      <div class="footer-contact-row">
+        <span>📞</span>
+        <span>(044) 760-4800</span>
+      </div>
+      <div class="footer-contact-row">
+        <span>📧</span>
+        <span>hrmpaombong2024@gmail.com</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

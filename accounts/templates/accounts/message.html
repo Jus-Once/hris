@@ -1,0 +1,795 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LGU Paombong – Employee Messages & FAQ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg-page: #f5f5fa;
+      --card-bg: #ffffff;
+      --card-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+      --border-light: #e1e1e8;
+      --blue-main: #003b8e;
+      --text-main: #222222;
+      --text-muted: #666666;
+      --logout-bg: #f0f0f0;
+      --pill-pending: #fbeaea;
+      --pill-responded: #e8f7ea;
+      --pill-pending-text: #b23434;
+      --pill-responded-text: #22773a;
+      --accent: #111;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    .header {
+      padding: 12px 40px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+    }
+
+    .logo-text-main {
+      font-size: 30px;
+    }
+
+    .logo-text-sub {
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .user-outline {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid #000000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+    }
+
+    .header-divider {
+      border: none;
+      border-top: 1px solid var(--border-light);
+      margin: 0 40px;
+    }
+
+    /* TOP NAV TABS */
+    .tab-bar {
+      padding: 10px 40px 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+    }
+
+    .tabs-left {
+      display: flex;
+      gap: 24px;
+      font-size: 16px;
+    }
+
+    .tab-link {
+      position: relative;
+      padding-bottom: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-link span.icon {
+      font-size: 18px;
+    }
+
+    .tab-link.active {
+      font-weight: 600;
+    }
+
+    .tab-link.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 2px;
+      background: #000000;
+    }
+
+    .logout-btn {
+      padding: 6px 20px;
+      background: var(--logout-bg);
+      border-radius: 999px;
+      border: 1px solid #cccccc;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .tab-underline {
+      border: none;
+      border-top: 1px solid var(--border-light);
+      margin: 0 40px 16px;
+    }
+
+    /* MAIN LAYOUT */
+    main {
+      flex: 1;
+      padding: 0 40px 40px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      margin-bottom: 18px;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1.2fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 4px;
+      border: 1px solid var(--border-light);
+      box-shadow: var(--card-shadow);
+      font-size: 13px;
+    }
+
+    .card-inner {
+      padding: 18px 20px;
+    }
+
+    .card-header {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    /* Employee messages list */
+    .msg-item {
+      border: 1px solid #e3e3e3;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      background: #fafafa;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    .msg-item.read {
+      background: #f0f0f0;
+      opacity: 0.85;
+    }
+
+    .msg-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .msg-name {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .msg-time {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .msg-type {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .msg-text {
+      font-size: 12px;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    .msg-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid #ccc;
+      background: #ffffff;
+    }
+
+    .pill-pending {
+      background: var(--pill-pending);
+      color: var(--pill-pending-text);
+      border-color: #f2b9b9;
+    }
+
+    .pill-responded {
+      background: var(--pill-responded);
+      color: var(--pill-responded-text);
+      border-color: #9fd3a6;
+    }
+
+    .pill-read {
+      background: #e4e4e4;
+      color: #333;
+      border-color: #c8c8c8;
+    }
+
+    .pill-action {
+      cursor: pointer;
+      background: #000;
+      color: #fff;
+      border-color: #000;
+      border-radius: 999px;
+    }
+
+    .pill-action button {
+      all: unset;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    /* RIGHT SIDE: FAQ / ANNOUNCEMENTS */
+    .right-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .right-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .subtabs {
+      display: inline-flex;
+      border-radius: 999px;
+      border: 1px solid #ccc;
+      overflow: hidden;
+      font-size: 12px;
+    }
+
+    .subtab-btn {
+      padding: 4px 10px;
+      background: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    .subtab-btn.active {
+      background: #000;
+      color: #fff;
+    }
+
+    .section-caption {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .field-input,
+    .field-select,
+    .field-textarea {
+      padding: 6px 8px;
+      border-radius: 2px;
+      border: 1px solid #cccccc;
+      font-size: 12px;
+      font-family: inherit;
+      background: #ffffff;
+    }
+
+    .field-textarea {
+      resize: vertical;
+      min-height: 50px;
+    }
+
+    .field-input:focus,
+    .field-select:focus,
+    .field-textarea:focus {
+      outline: none;
+      border-color: #000;
+    }
+
+    .btn-primary {
+      padding: 6px 20px;
+      border-radius: 2px;
+      border: 1px solid #000;
+      background: #000;
+      color: #ffffff;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .existing-title {
+      font-size: 12px;
+      margin-top: 10px;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .faq-list, .announce-list {
+      border: 1px solid #e3e3e3;
+      background: #fafafa;
+      max-height: 190px;
+      overflow-y: auto;
+    }
+
+    .faq-item,
+    .announce-item {
+      padding: 6px 8px;
+      border-bottom: 1px solid #e3e3e3;
+      font-size: 12px;
+    }
+
+    .faq-item:last-child,
+    .announce-item:last-child {
+      border-bottom: none;
+    }
+
+    .faq-question {
+      font-weight: 600;
+    }
+
+    .faq-category {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .announce-title-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .announce-title {
+      font-weight: 600;
+    }
+
+    .announce-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .announce-body {
+      font-size: 12px;
+      color: #444;
+    }
+
+    /* LOGOUT MODAL */
+    .logout-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(6px);
+      background: rgba(255, 255, 255, 0.3);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .logout-modal {
+      background: white;
+      padding: 25px 35px;
+      border-radius: 18px;
+      border: 2px solid #000;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      font-size: 20px;
+    }
+
+    .logout-modal .logout-yes {
+      background: #0048ff;
+      color: white;
+      padding: 6px 20px;
+      border-radius: 10px;
+      border: 2px solid #000;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    .logout-modal .logout-no {
+      background: white;
+      padding: 6px 18px;
+      margin-left: 10px;
+      border-radius: 10px;
+      border: 2px solid #000;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #222;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: 0.25s;
+      z-index: 1200;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 950px) {
+      main {
+        padding-inline: 20px;
+      }
+      .header,
+      .tab-bar {
+        padding-inline: 20px;
+      }
+      .header-divider,
+      .tab-underline {
+        margin-inline: 20px;
+      }
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <img src="{% static 'accounts/images/paombongLogo.jpg' %}" alt="LGU Paombong Logo" class="logo-img" />
+      <div>
+        <div class="logo-text-main">LGU Paombong</div>
+        <div class="logo-text-sub">Human Resource Information System</div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="user-outline">👤</div>
+    </div>
+  </header>
+
+  <hr class="header-divider" />
+
+  <!-- NAV TABS -->
+  <div class="tab-bar">
+    <div class="tabs-left">
+      <div class="tab-link" data-href="{% url 'admindash'%}">
+        <span class="icon">▦</span>
+        <span>Dashboard</span>
+      </div>
+      <div class="tab-link" data-href="{% url 'adminemployee'%}">
+        <span class="icon">👥</span>
+        <span>Employees</span>
+      </div>
+      <div class="tab-link" data-href="{% url 'time'%}">
+        <span class="icon">⏱</span>
+        <span>Time Tracking</span>
+      </div>
+      <div class="tab-link active" data-href="{% url 'message'%}">
+        <span class="icon">✉</span>
+        <span>Messages</span>
+      </div>
+    </div>
+
+    <button class="logout-btn">Logout</button>
+  </div>
+
+  <hr class="tab-underline" />
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <h1 class="page-title">Employee Messages & FAQ</h1>
+
+    <div class="content-grid">
+      <!-- LEFT: EMPLOYEE MESSAGES -->
+      <section class="card">
+        <div class="card-inner">
+          <div class="card-header">
+            <span>Employee Messages</span>
+          </div>
+          <p class="section-caption">Direct messages and requests from employees</p>
+
+          {% for msg in messages %}
+            <div class="msg-item {% if msg.status == 'read' %}read{% endif %}">
+              <div class="msg-top">
+                <span class="msg-name">{{ msg.name }}</span>
+                <span class="msg-time">{{ msg.created_at|date:"h:i A" }}</span>
+              </div>
+              <div class="msg-type">{{ msg.message_type|default:"Message" }}</div>
+              <div class="msg-text">
+                {{ msg.text }}
+              </div>
+              <div class="msg-tags">
+                <span class="pill
+                  {% if msg.status == 'pending' %}pill-pending
+                  {% elif msg.status == 'responded' %}pill-responded
+                  {% else %}pill-read{% endif %}">
+                  {{ msg.get_status_display }}
+                </span>
+
+                <form method="post" action="{% url 'message_update_status' msg.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="respond">
+                  <span class="pill pill-action">
+                    <button type="submit">
+                      {% if msg.status == 'pending' %}Mark Responded{% else %}Responded{% endif %}
+                    </button>
+                  </span>
+                </form>
+
+                <form method="post" action="{% url 'message_update_status' msg.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="read">
+                  <span class="pill pill-action">
+                    <button type="submit">Mark as Read</button>
+                  </span>
+                </form>
+              </div>
+            </div>
+          {% empty %}
+            <p class="section-caption">No messages yet.</p>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- RIGHT: FAQ + ANNOUNCEMENTS -->
+      <section class="card">
+        <div class="card-inner">
+          <div class="right-header-row">
+            <div class="right-title">Management Panel</div>
+            <div class="subtabs">
+              <button class="subtab-btn active" id="tabFaq">FAQ</button>
+              <button class="subtab-btn" id="tabAnnouncements">Announcements</button>
+            </div>
+          </div>
+
+          <!-- FAQ VIEW -->
+          <div id="faqView">
+            <p class="section-caption">
+              Manage frequently asked questions.
+            </p>
+
+            <form method="post" action="{% url 'message' %}">
+              {% csrf_token %}
+              <input type="hidden" name="form_type" value="faq">
+              <div class="form-grid">
+                <div class="field-group">
+                  <label class="field-label" for="faqQuestion">Question</label>
+                  <input id="faqQuestion" name="faqQuestion" class="field-input" placeholder="Enter FAQ question" />
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="faqAnswer">Answer</label>
+                  <textarea id="faqAnswer" name="faqAnswer" class="field-textarea" placeholder="Enter FAQ answer"></textarea>
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="faqCategory">Category</label>
+                  <select id="faqCategory" name="faqCategory" class="field-select">
+                    <option value="">Select Category</option>
+                    <option value="Leave Policies">Leave Policies</option>
+                    <option value="Payroll">Payroll</option>
+                    <option value="Benefits">Benefits</option>
+                    <option value="General">General</option>
+                  </select>
+                </div>
+              </div>
+
+              <button class="btn-primary" type="submit">Add FAQ</button>
+            </form>
+
+            <div class="existing-title">Existing FAQs</div>
+            <div class="faq-list" id="faqList">
+              {% for faq in faqs %}
+                <div class="faq-item">
+                  <div class="faq-question">{{ faq.question }}</div>
+                  <div>{{ faq.answer }}</div>
+                  <div class="faq-category">{{ faq.category }}</div>
+                </div>
+              {% empty %}
+                <div class="faq-item">
+                  <div class="faq-question">No FAQs yet.</div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- ANNOUNCEMENT VIEW -->
+          <div id="announceView" style="display:none;">
+            <p class="section-caption">
+              Create announcements that will appear on the employee dashboard.
+            </p>
+
+            <form method="post" action="{% url 'message' %}">
+              {% csrf_token %}
+              <input type="hidden" name="form_type" value="announcement">
+              <div class="form-grid">
+                <div class="field-group">
+                  <label class="field-label" for="annTitle">Title</label>
+                  <input id="annTitle" name="annTitle" class="field-input" placeholder="Announcement title" />
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="annDate">Date</label>
+                  <input id="annDate" name="annDate" type="date" class="field-input" />
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="annBody">Details</label>
+                  <textarea id="annBody" name="annBody" class="field-textarea" placeholder="Announcement details"></textarea>
+                </div>
+              </div>
+
+              <button class="btn-primary" type="submit">Post Announcement</button>
+            </form>
+
+            <div class="existing-title">Existing Announcements</div>
+            <div class="announce-list" id="announceList">
+              {% for ann in announcements %}
+                <div class="announce-item">
+                  <div class="announce-title-row">
+                    <span class="announce-title">{{ ann.title }}</span>
+                    <span class="announce-date">
+                      {% if ann.date %}{{ ann.date|date:"Y-m-d" }}{% endif %}
+                    </span>
+                  </div>
+                  <div class="announce-body">{{ ann.body }}</div>
+                </div>
+              {% empty %}
+                <div class="announce-item">
+                  <div class="announce-title-row">
+                    <span class="announce-title">No announcements yet.</span>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- LOGOUT MODAL -->
+  <div class="logout-backdrop" id="logoutBackdrop">
+    <div class="logout-modal">
+      <p>Are you sure you want to<br />logout?</p>
+      <br />
+      <button class="logout-yes" onclick="confirmLogout()">Logout</button>
+      <button class="logout-no" onclick="closeLogoutModal()">No</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">Saved successfully.</div>
+
+  <script>
+    // Nav tab links
+    document.querySelectorAll(".tab-link").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const target = tab.getAttribute("data-href");
+        if (target && !tab.classList.contains("active")) {
+          window.location.href = target;
+        }
+      });
+    });
+
+    // Logout handling
+    const logoutBtn = document.querySelector(".logout-btn");
+    const logoutBackdrop = document.getElementById("logoutBackdrop");
+
+    logoutBtn.addEventListener("click", () => {
+      logoutBackdrop.style.display = "flex";
+    });
+
+    function closeLogoutModal() {
+      logoutBackdrop.style.display = "none";
+    }
+
+    function confirmLogout() {
+       window.location.href = "{% url 'adminlogout'%}";
+    }
+
+    // Toast helper
+    const toast = document.getElementById("toast");
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+    // Subtabs: FAQ / Announcements
+    const tabFaq = document.getElementById("tabFaq");
+    const tabAnnouncements = document.getElementById("tabAnnouncements");
+    const faqView = document.getElementById("faqView");
+    const announceView = document.getElementById("announceView");
+
+    tabFaq.addEventListener("click", () => {
+      tabFaq.classList.add("active");
+      tabAnnouncements.classList.remove("active");
+      faqView.style.display = "block";
+      announceView.style.display = "none";
+    });
+
+    tabAnnouncements.addEventListener("click", () => {
+      tabAnnouncements.classList.add("active");
+      tabFaq.classList.remove("active");
+      faqView.style.display = "none";
+      announceView.style.display = "block";
+    });
+  </script>
+</body>
+</html>

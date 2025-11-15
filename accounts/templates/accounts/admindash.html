@@ -1,0 +1,681 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LGU Paombong – Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg-page: #f5f5fa;
+      --card-bg: #ffffff;
+      --card-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+      --border-light: #e1e1e8;
+      --blue-main: #003b8e;
+      --text-main: #222222;
+      --text-muted: #666666;
+      --salmon: #f39ca0;
+      --lavender: #8e8fd8;
+      --logout-bg: #f0f0f0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    .header {
+      padding: 12px 40px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+    }
+
+    .logo-text-main {
+      font-size: 30px;
+    }
+
+    .logo-text-sub {
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .user-outline {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid #000000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+    }
+
+    .header-divider {
+      border: none;
+      border-top: 1px solid var(--border-light);
+      margin: 0 40px;
+    }
+
+    /* TOP NAV TABS */
+    .tab-bar {
+      padding: 10px 40px 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+    }
+
+    .tabs-left {
+      display: flex;
+      gap: 24px;
+      font-size: 16px;
+    }
+
+    .tab-link {
+      position: relative;
+      padding-bottom: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-link span.icon {
+      font-size: 18px;
+    }
+
+    .tab-link.active {
+      font-weight: 600;
+    }
+
+    .tab-link.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 2px;
+      background: #000000;
+    }
+
+    .logout-btn {
+      padding: 6px 20px;
+      background: var(--logout-bg);
+      border-radius: 999px;
+      border: 1px solid #cccccc;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .tab-underline {
+      border: none;
+      border-top: 1px solid var(--border-light);
+      margin: 0 40px 16px;
+    }
+
+    /* MAIN GRID */
+    main {
+      flex: 1;
+      padding: 0 40px 40px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1.1fr 1.4fr;
+      grid-template-rows: auto 1fr;
+      grid-template-areas:
+        "emp msg attend"
+        "chart chart attend";
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      box-shadow: var(--card-shadow);
+      border-radius: 4px;
+    }
+
+    /* COMMON clickable style for metric cards */
+    .clickable-card {
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .clickable-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    /* Metric Cards */
+    .card-metric {
+      grid-area: emp;
+      background: var(--salmon);
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #ffffff;
+      gap: 10px;
+    }
+
+    .card-metric h2 {
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .card-metric .metric-icon {
+      font-size: 50px;
+      line-height: 1;
+    }
+
+    .card-metric .metric-value {
+      font-size: 40px;
+    }
+
+    .card-messages {
+      grid-area: msg;
+      background: var(--lavender);
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #ffffff;
+      gap: 12px;
+    }
+
+    .card-messages h2 {
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .card-messages .msg-body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .card-messages .msg-icon {
+      font-size: 52px;
+    }
+
+    .card-messages .msg-count {
+      font-size: 48px;
+    }
+
+    /* Attendance card (maximized) */
+    .card-attendance {
+      grid-area: attend;
+      padding: 28px 26px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: #f7f9ff;
+      min-height: 100%;
+    }
+
+    .card-attendance h2 {
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .attendance-inner {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      justify-content: center;
+      padding-top: 10px;
+    }
+
+    .donut-wrap {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: conic-gradient(
+        #24b35b 0 {{ present_pct }}deg,
+        #ff9f43 {{ present_pct }}deg {{ present_pct|add:late_pct }}deg,
+        #ff4d4f {{ present_pct|add:late_pct }}deg {{ present_pct|add:late_pct|add:absent_pct }}deg,
+        #8e8fd8 {{ present_pct|add:late_pct|add:absent_pct }}deg {{ present_pct|add:late_pct|add:absent_pct|add:fieldwork_pct }}deg,
+        #00b8d9 {{ present_pct|add:late_pct|add:absent_pct|add:fieldwork_pct }}deg 360deg
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .donut-center {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .donut-center-main {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .donut-center-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .attendance-legend {
+      font-size: 13px;
+      min-width: 160px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .legend-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .lg-present { background:#24b35b;}
+    .lg-late    { background:#ff9f43;}
+    .lg-absent  { background:#ff4d4f;}
+    .lg-field   { background:#8e8fd8;}
+    .lg-health  { background:#00b8d9;}
+
+    .legend-bar {
+      flex: 1;
+      height: 4px;
+      border-radius: 999px;
+      margin: 0 8px;
+      background: #e5e7f0;
+      overflow: hidden;
+    }
+
+    .legend-bar-fill {
+      height: 100%;
+      background: currentColor;
+    }
+
+    .legend-count {
+      width: 24px;
+      text-align: right;
+    }
+
+    /* Chart card */
+    .card-chart {
+      grid-area: chart;
+      padding: 18px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-chart h2 {
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .chart-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .chart-box {
+      border: 1px solid var(--border-light);
+      padding: 10px 12px 4px;
+    }
+
+    .chart-svg {
+      width: 100%;
+      height: 160px;
+    }
+
+    .chart-xlabels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-top: 6px;
+      padding: 0 4px;
+    }
+
+    /* LOGOUT MODAL */
+    .logout-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(6px);
+      background: rgba(255, 255, 255, 0.3);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .logout-modal {
+      background: white;
+      padding: 25px 35px;
+      border-radius: 18px;
+      border: 2px solid #000;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      font-size: 20px;
+    }
+
+    .logout-modal .logout-yes {
+      background: #0048ff;
+      color: white;
+      padding: 6px 20px;
+      border-radius: 10px;
+      border: 2px solid #000;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    .logout-modal .logout-no {
+      background: white;
+      padding: 6px 18px;
+      margin-left: 10px;
+      border-radius: 10px;
+      border: 2px solid #000;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    /* Responsive */
+    @media (max-width: 1000px) {
+      .grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto;
+        grid-template-areas:
+          "emp"
+          "msg"
+          "chart"
+          "attend";
+      }
+      .card-attendance {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .header,
+      .tab-bar {
+        padding-inline: 18px;
+      }
+      .header-divider,
+      .tab-underline,
+      main {
+        margin-inline: 18px;
+        padding-inline: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <img src="{% static 'accounts/images/paombongLogo.jpg' %}" alt="LGU Paombong Logo" class="logo-img" />
+      <div>
+        <div class="logo-text-main">LGU Paombong</div>
+        <div class="logo-text-sub">Human Resource Information System</div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="user-outline">👤</div>
+    </div>
+  </header>
+
+  <hr class="header-divider" />
+
+  <!-- NAV TABS -->
+  <div class="tab-bar">
+    <div class="tabs-left">
+      <div class="tab-link active" data-href="{% url 'admindash'%}">
+        <span class="icon">▦</span>
+        <span>Dashboard</span>
+      </div>
+      <div class="tab-link" data-href="{% url 'adminemployee'%}">
+        <span class="icon">👥</span>
+        <span>Employees</span>
+      </div>
+      <div class="tab-link" data-href="{% url 'time'%}">
+        <span class="icon">⏱</span>
+        <span>Time Tracking</span>
+      </div>
+      <div class="tab-link" data-href="{% url 'message'%}">
+        <span class="icon">✉</span>
+        <span>Messages</span>
+      </div>
+    </div>
+
+    <button class="logout-btn">Logout</button>
+  </div>
+
+  <hr class="tab-underline" />
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <div class="grid">
+      <!-- No. of Employees (clickable) -->
+      <section
+        class="card card-metric clickable-card"
+        onclick="window.location.href='{% url 'adminemployee'%}'"
+      >
+        <h2>No. of Employees</h2>
+        <div class="metric-icon">👥</div>
+        <div class="metric-value">{{ employee_count }}</div>
+      </section>
+
+      <!-- Messages (clickable) -->
+      <section
+        class="card card-messages clickable-card"
+        onclick="window.location.href='{% url 'message'%}'"
+      >
+        <h2>Messages</h2>
+        <div class="msg-body">
+          <div class="msg-icon">📧</div>
+          <div class="msg-count">{{ pending_messages_count }}</div>
+        </div>
+      </section>
+
+      <!-- Attendance (maximized) -->
+      <section class="card card-attendance">
+        <h2>ATTENDANCE (Today)</h2>
+        <div class="attendance-inner">
+          <div class="donut-wrap">
+            <div class="donut-center">
+              <div class="donut-center-main">{{ present }}/{{ total_att }}</div>
+              <div class="donut-center-sub">Present / Total</div>
+            </div>
+          </div>
+
+          <div class="attendance-legend">
+            <div class="legend-row" style="color:#24b35b;">
+              <div class="legend-label">
+                <span class="legend-color lg-present"></span>
+                <span>Present</span>
+              </div>
+              <div class="legend-bar">
+                <div class="legend-bar-fill" style="width:{{ present_pct }}%;"></div>
+              </div>
+              <div class="legend-count">{{ present }}</div>
+            </div>
+
+            <div class="legend-row" style="color:#ff9f43;">
+              <div class="legend-label">
+                <span class="legend-color lg-late"></span>
+                <span>Late</span>
+              </div>
+              <div class="legend-bar">
+                <div class="legend-bar-fill" style="width:{{ late_pct }}%;"></div>
+              </div>
+              <div class="legend-count">{{ late }}</div>
+            </div>
+
+            <div class="legend-row" style="color:#ff4d4f;">
+              <div class="legend-label">
+                <span class="legend-color lg-absent"></span>
+                <span>Absent</span>
+              </div>
+              <div class="legend-bar">
+                <div class="legend-bar-fill" style="width:{{ absent_pct }}%;"></div>
+              </div>
+              <div class="legend-count">{{ absent }}</div>
+            </div>
+
+            <div class="legend-row" style="color:#8e8fd8;">
+              <div class="legend-label">
+                <span class="legend-color lg-field"></span>
+                <span>Fieldwork</span>
+              </div>
+              <div class="legend-bar">
+                <div class="legend-bar-fill" style="width:{{ fieldwork_pct }}%;"></div>
+              </div>
+              <div class="legend-count">{{ fieldwork }}</div>
+            </div>
+
+            <div class="legend-row" style="color:#00b8d9;">
+              <div class="legend-label">
+                <span class="legend-color lg-health"></span>
+                <span>Health</span>
+              </div>
+              <div class="legend-bar">
+                <div class="legend-bar-fill" style="width:{{ health_pct }}%;"></div>
+              </div>
+              <div class="legend-count">{{ health }}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Average Hour Per Week Chart -->
+      <section class="card card-chart">
+        <h2>Average Hour Per Week</h2>
+        <div class="chart-wrapper">
+          <div class="chart-box">
+            <!-- Simple SVG line chart (static for now) -->
+            <svg class="chart-svg" viewBox="0 0 100 50" preserveAspectRatio="none">
+              <!-- grid lines -->
+              <line x1="0" y1="45" x2="100" y2="45" stroke="#ddd" stroke-width="0.4" />
+              <line x1="0" y1="35" x2="100" y2="35" stroke="#eee" stroke-width="0.4" />
+              <line x1="0" y1="25" x2="100" y2="25" stroke="#eee" stroke-width="0.4" />
+              <line x1="0" y1="15" x2="100" y2="15" stroke="#eee" stroke-width="0.4" />
+              <!-- line -->
+              <polyline
+                fill="none"
+                stroke="#e05555"
+                stroke-width="1.4"
+                points="5,10 25,18 45,12 65,13 85,20"
+              />
+            </svg>
+            <div class="chart-xlabels">
+              <span>Monday</span>
+              <span>Tuesday</span>
+              <span>Wednesday</span>
+              <span>Thursday</span>
+              <span>Friday</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- LOGOUT MODAL -->
+  <div class="logout-backdrop" id="logoutBackdrop">
+    <div class="logout-modal">
+      <p>Are you sure you want to<br>logout?</p>
+      <br>
+      <button class="logout-yes" onclick="confirmLogout()">Logout</button>
+      <button class="logout-no" onclick="closeLogoutModal()">No</button>
+    </div>
+  </div>
+
+  <script>
+    const logoutBtn = document.querySelector(".logout-btn");
+    const logoutBackdrop = document.getElementById("logoutBackdrop");
+
+    // Open modal when clicking logout
+    logoutBtn.addEventListener("click", () => {
+      logoutBackdrop.style.display = "flex";
+    });
+
+    // Close modal
+    function closeLogoutModal() {
+      logoutBackdrop.style.display = "none";
+    }
+
+    // Confirm logout → redirect to login page
+    function confirmLogout() {
+      window.location.href = "{% url 'adminlogout' %}";
+    }
+
+    // --------- NAV TAB CLICK HANDLERS ----------
+    document.querySelectorAll(".tab-link").forEach(tab => {
+      tab.addEventListener("click", () => {
+        const target = tab.getAttribute("data-href");
+        if (target && !tab.classList.contains("active")) {
+          window.location.href = target;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LGU Paombong – Admin Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #ffffff;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* TOP STRIP + HEADER */
+.top-strip {
+  height: 6px;
+  background: #184a97; /* navy blue strip under header */
+  margin-top: 10px;
+}
+
+.header {
+  position: relative;
+  z-index: 2;
+  padding: 10px 40px 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left,
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.seal-circle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* Text styles similar to screenshot */
+.header-title-left {
+  font-family: "Times New Roman", serif;
+  font-size: 30px;
+}
+
+.header-title-right {
+  font-family: "Times New Roman", serif;
+  font-size: 30px;
+  text-align: right;
+}
+
+/* BACKGROUND PATTERN TRIANGLES */
+.pattern {
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.pattern-left,
+.pattern-right {
+  width: 55vw;
+  height: 55vh;
+  background-image:
+    linear-gradient(90deg, #e3ebff 10px, transparent 10px),
+    linear-gradient(#e3ebff 10px, transparent 10px);
+  background-size: 40px 40px;
+  background-color: #184a97;
+}
+
+.pattern-left {
+  bottom: -5vh;
+  left: -10vw;
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+}
+
+.pattern-right {
+  bottom: -5vh;
+  right: -10vw;
+  clip-path: polygon(0 100%, 100% 0, 100% 100%);
+}
+
+/* MAIN CONTENT WRAPPER */
+.main-wrapper {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Admin heading row */
+.admin-heading {
+  margin-top: 60px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-icon {
+  width: 60px;
+  height: 60px;
+  position: relative;
+}
+
+/* simple silhouette (head + shoulders) */
+.admin-icon-head {
+  position: absolute;
+  top: 5px;
+  left: 16px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #000000;
+}
+
+.admin-icon-body {
+  position: absolute;
+  bottom: 0;
+  left: 6px;
+  width: 48px;
+  height: 26px;
+  border-radius: 50% 50% 0 0;
+  background: #000000;
+}
+
+.admin-icon-gear {
+  position: absolute;
+  bottom: 4px;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid #000000;
+}
+
+/* admin text */
+.admin-text-main {
+  font-family: "Times New Roman", serif;
+  font-size: 32px;
+}
+
+.admin-text-sub {
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.admin-underline {
+  margin-top: 6px;
+  height: 2px;
+  width: 260px;
+  background: #a0a0a0;
+}
+
+/* LOGIN CARD */
+.login-card-wrapper {
+  margin-top: 20px;
+}
+
+.login-card {
+  width: 320px;
+  min-height: 350px;
+  padding: 60px 35px 28px;
+  border-radius: 25px;
+  border: 1px solid #cccccc;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.15);
+  text-align: center;
+}
+
+/* inputs */
+.input-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: none;
+  background: #eaeaea;
+  font-size: 18px;
+  font-family: "Times New Roman", serif;
+}
+
+.input-group input::placeholder {
+  color: #707070;
+}
+
+/* login button */
+.login-btn {
+  margin-top: 30px;
+  margin-bottom: 16px;
+  width: 60%;
+  padding: 10px 0;
+  border-radius: 999px;
+  border: none;
+  background: #2353ff;
+  color: #ffffff;
+  font-size: 18px;
+  cursor: pointer;
+  font-family: "Times New Roman", serif;
+}
+
+.login-btn:hover {
+  background: #153cdc;
+}
+
+/* back arrow */
+.back-arrow {
+  font-size: 30px;
+  cursor: pointer;
+}
+
+/* error text */
+.error-text {
+  color: #c53030;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .header {
+    padding-inline: 18px;
+  }
+  .header-left, .header-right {
+    gap: 8px;
+  }
+  .header-title-left {
+    font-size: 28px;
+  }
+  .header-title-right {
+    font-size: 18px;
+  }
+  .admin-heading {
+    margin-top: 40px;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="seal-circle">
+     <img src="{% static 'accounts/images/paombongLogo.jpg' %}" alt="HRIS Seal" class="seal-circle">
+    </div>
+    <div class="header-title-left">LGU Paombong</div>
+  </div>
+  <div class="header-right">
+    <div class="header-title-right">
+      Human Resource<br>
+      Management Office
+    </div>
+    <img src="{% static 'accounts/images/HRISLOGO.jpg' %}" alt="HRIS Seal" class="seal-circle">
+  </div>
+</header>
+
+<div class="top-strip"></div>
+<div class="pattern pattern-left"></div>
+<div class="pattern pattern-right"></div>
+
+<main class="main-wrapper">
+  <!-- Admin heading -->
+  <div class="admin-heading">
+    <div class="admin-icon">
+      <div class="admin-icon-head"></div>
+      <div class="admin-icon-body"></div>
+      <div class="admin-icon-gear"></div>
+    </div>
+    <div>
+      <div class="admin-text-main">Admin Portal</div>
+      <div class="admin-text-sub">Human Resource Information System</div>
+      <div class="admin-underline"></div>
+    </div>
+  </div>
+
+  <!-- Login card -->
+  <div class="login-card-wrapper">
+    <div class="login-card">
+      <form method="post" action="{% url 'adminlogin' %}">
+        {% csrf_token %}
+        <div class="input-group">
+          <input type="text" name="username" placeholder="Username" required>
+        </div>
+        <div class="input-group">
+          <input type="password" name="password" placeholder="Password" required>
+        </div>
+
+        {% if error %}
+          <div class="error-text">{{ error }}</div>
+        {% endif %}
+
+        <button type="submit" class="login-btn">
+          Login
+        </button>
+      </form>
+
+      <div class="back-arrow" onclick="window.location.href='{% url 'home' %}'">&#8592;</div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>
