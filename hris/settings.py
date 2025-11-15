@@ -20,23 +20,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent  # fixed: _file_ (not file)
 # In production, set this via environment variable
 SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY",
-    "django-insecure-9t7b+=_+$xd+=e&0gft+9grb_u0#kxn@91@9fpzno2ghbu28%4",  # dev fallback
+    "django-insecure-9t7b+=_+$xd+=e&0gft+9grb_u0#kxn@91@9fpzno2ghbu28%4",
 )
 
-# Debug should be False in production
-DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
+DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
 
-# Comma-separated hostnames in env: "mydomain.com,www.mydomain.com"
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if os.getenv(
-    "DJANGO_ALLOWED_HOSTS"
-) else []
+ALLOWED_HOSTS_ENV = os.getenv("DJANGO_ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = [h for h in ALLOWED_HOSTS_ENV.split(",") if h]
 
-# For HTTPS + CSRF (set in prod, leave empty in dev)
-CSRF_TRUSTED_ORIGINS = (
-    os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
-    if os.getenv("CSRF_TRUSTED_ORIGINS")
-    else []
-)
+CSRF_TRUSTED_ORIGINS_ENV = os.getenv("CSRF_TRUSTED_ORIGINS", "")
+CSRF_TRUSTED_ORIGINS = [
+    o for o in CSRF_TRUSTED_ORIGINS_ENV.split(",") if o
+]
 
 # =========================================================
 # APPLICATIONS
