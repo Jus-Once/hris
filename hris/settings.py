@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "accounts",
+    "accounts.apps.AccountsConfig",
 ]
 
 MIDDLEWARE = [
@@ -140,16 +140,8 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# =========================================================
+# DEFAULT PRIMARY KEY FIELD TYPE
+# =========================================================
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-from django.contrib.auth.models import User
-
-try:
-    if not User.objects.filter(username="admin").exists():
-        User.objects.create_superuser(
-            username="depthead01",
-            email="depthead@gmail.com",
-            password="@Admin01"
-        )
-except:
-    pass
