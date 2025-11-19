@@ -270,9 +270,8 @@
       background: conic-gradient(
         #24b35b 0 {{ present_pct }}deg,
         #ff9f43 {{ present_pct }}deg {{ present_pct|add:late_pct }}deg,
-        #ff4d4f {{ present_pct|add:late_pct }}deg {{ present_pct|add:late_pct|add:absent_pct }}deg,
-        #8e8fd8 {{ present_pct|add:late_pct|add:absent_pct }}deg {{ present_pct|add:late_pct|add:absent_pct|add:fieldwork_pct }}deg,
-        #00b8d9 {{ present_pct|add:late_pct|add:absent_pct|add:fieldwork_pct }}deg 360deg
+        #ff4d4f {{ present_pct|add:late_pct }}deg {{ present_pct|add:late_pct|add:absent_pct }}deg
+       
       );
       display: flex;
       align-items: center;
@@ -329,7 +328,6 @@
     .lg-late    { background:#ff9f43;}
     .lg-absent  { background:#ff4d4f;}
     .lg-field   { background:#8e8fd8;}
-    .lg-health  { background:#00b8d9;}
 
     .legend-bar {
       flex: 1;
@@ -580,27 +578,6 @@
               <div class="legend-count">{{ absent }}</div>
             </div>
 
-            <div class="legend-row" style="color:#8e8fd8;">
-              <div class="legend-label">
-                <span class="legend-color lg-field"></span>
-                <span>Fieldwork</span>
-              </div>
-              <div class="legend-bar">
-                <div class="legend-bar-fill" style="width:{{ fieldwork_pct }}%;"></div>
-              </div>
-              <div class="legend-count">{{ fieldwork }}</div>
-            </div>
-
-            <div class="legend-row" style="color:#00b8d9;">
-              <div class="legend-label">
-                <span class="legend-color lg-health"></span>
-                <span>Health</span>
-              </div>
-              <div class="legend-bar">
-                <div class="legend-bar-fill" style="width:{{ health_pct }}%;"></div>
-              </div>
-              <div class="legend-count">{{ health }}</div>
-            </div>
           </div>
         </div>
       </section>
@@ -620,7 +597,7 @@
               <!-- line -->
               <polyline
                 fill="none"
-                stroke="#e05555"
+                stroke="#fe0000ff"
                 stroke-width="1.4"
                 points="5,10 25,18 45,12 65,13 85,20"
               />

@@ -342,6 +342,51 @@
       font-size: 16px;
     }
 
+    /* PRINT BUTTON */
+    .print-btn {
+      background: #003b8e;
+      color: #ffffff;
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      float: right;
+      margin-top: -6px;
+      margin-bottom: 8px;
+    }
+    .print-btn:hover {
+      background: #00275c;
+    }
+
+    /* Period selector */
+    .period-form {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    .period-form select {
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #cfd3e0;
+      font-size: 13px;
+    }
+    .period-form button {
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid #003b8e;
+      background: #003b8e;
+      color: #ffffff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .period-form button:hover {
+      background: #00275c;
+    }
+
     @media (max-width: 1024px) {
       .layout {
         grid-template-columns: 230px minmax(0, 1fr);
@@ -361,21 +406,32 @@
         grid-template-columns: minmax(0, 1fr);
       }
     }
+
+    /* Optional: basic print cleanup */
+    @media print {
+      .top-bar,
+      .sub-bar,
+      .sidebar,
+      footer,
+      .period-form,
+      .print-btn {
+        display: none !important;
+      }
+      body {
+        background: #ffffff;
+      }
+      main {
+        padding: 0;
+      }
+      .card {
+        box-shadow: none;
+        border-radius: 0;
+      }
+    }
   </style>
 </head>
 <body>
-  <header class="top-bar">
-    <div class="brand-left">
-      <div class="brand-title">LGU Paombong</div>
-      <div class="brand-subtitle">Human Resource Information System</div>
-    </div>
 
-    <nav class="top-nav">
-      <a href="{% url 'employeedash'%}">Home</a>
-      <a href="{% url 'employeedash'%}">Dashboard</a>
-      <a href="#">Contact us</a>
-    </nav>
-  </header>
 
   <div class="sub-bar">
     <div class="sub-left">
@@ -448,23 +504,41 @@
 
       <section class="payslip-wrapper">
         <article class="card">
+
+          <!-- PRINT BUTTON -->
+          <button class="print-btn" onclick="window.print()">Print</button>
+
           <h2 class="card-title">Payslip Summary</h2>
+
+          <!-- Pay Period selector -->
+          <form method="get" class="period-form">
+            <label for="period">Pay period:</label>
+            <select name="period" id="period">
+              {% for p in period_options %}
+                <option value="{{ p.value }}" {% if p.value == selected_period_value %}selected{% endif %}>
+                  {{ p.label }}
+                </option>
+              {% endfor %}
+            </select>
+            <button type="submit">Apply</button>
+          </form>
 
           <div class="payslip-header">
             <div>
               <span><span class="label">Employee Name:</span>
-                {% if employee %}{{ employee.full_name }}{% else %}Juan Dela Cruz{% endif %}
+                {{ employee.full_name }}
               </span>
               <span><span class="label">Employee ID:</span>
-                {% if employee %}{{ employee.emp_id }}{% else %}EMP-00123{% endif %}
+                {{ employee.emp_id }}
               </span>
               <span><span class="label">Department:</span>
-                {% if employee %}{{ employee.dept }}{% else %}HRMO{% endif %}
+                {{ employee.dept }}
               </span>
             </div>
             <div>
-              <span><span class="label">Pay Period:</span> October 01–15, 2025</span>
-              <span><span class="label">Pay Date:</span> October 16, 2025</span>
+              <span><span class="label">Pay Period:</span>
+                {{ selected_period_label }}
+              </span>
             </div>
           </div>
 
@@ -478,48 +552,64 @@
               </tr>
             </thead>
             <tbody>
+              <!-- Basic Salary & GSIS -->
               <tr>
                 <td>Basic Salary</td>
-                <td class="align-right">25,000.00</td>
-                <td>Withholding Tax</td>
-                <td class="align-right">2,000.00</td>
-              </tr>
-              <tr>
-                <td>Allowance</td>
-                <td class="align-right">2,000.00</td>
+                <td class="align-right">{{ basic_salary|floatformat:2 }}</td>
                 <td>GSIS</td>
-                <td class="align-right">1,500.00</td>
+                <td class="align-right">
+                  {% if is_job_order %}0.00{% else %}{{ gsis|floatformat:2 }}{% endif %}
+                </td>
               </tr>
+
+              <!-- RATA & PhilHealth -->
               <tr>
-                <td>Overtime Pay</td>
-                <td class="align-right">1,200.00</td>
+                <td>RATA / Allowance</td>
+                <td class="align-right">
+                  {% if is_job_order %}0.00{% else %}{{ rata|floatformat:2 }}{% endif %}
+                </td>
                 <td>PhilHealth</td>
-                <td class="align-right">400.00</td>
+                <td class="align-right">
+                  {% if is_job_order %}0.00{% else %}{{ philhealth|floatformat:2 }}{% endif %}
+                </td>
               </tr>
+
+              <!-- Pag-IBIG -->
               <tr>
-                <td>Other Earnings</td>
-                <td class="align-right">500.00</td>
+                <td></td>
+                <td></td>
                 <td>Pag-IBIG</td>
-                <td class="align-right">300.00</td>
+                <td class="align-right">
+                  {% if is_job_order %}0.00{% else %}{{ pagibig|floatformat:2 }}{% endif %}
+                </td>
               </tr>
+
+              <!-- GSIS Loan -->
+              <tr>
+                <td></td>
+                <td></td>
+                <td>GSIS Loan</td>
+                <td class="align-right">
+                  {% if is_job_order %}0.00{% else %}{{ gsis_loan|floatformat:2 }}{% endif %}
+                </td>
+              </tr>
+
+              <!-- Totals -->
               <tr class="totals-row">
                 <td>Total Earnings</td>
-                <td class="align-right">28,700.00</td>
+                <td class="align-right">{{ total_earnings|floatformat:2 }}</td>
                 <td>Total Deductions</td>
-                <td class="align-right">4,200.00</td>
+                <td class="align-right">{{ total_deductions|floatformat:2 }}</td>
               </tr>
               <tr class="totals-row">
                 <td>Net Pay</td>
-                <td class="align-right">24,500.00</td>
+                <td class="align-right">{{ net_pay|floatformat:2 }}</td>
                 <td></td>
                 <td></td>
               </tr>
             </tbody>
           </table>
 
-          <div class="note">
-            This payslip layout is for reference only. Actual figures will depend on the official payroll computation of LGU Paombong.
-          </div>
         </article>
       </section>
     </div>

@@ -14,6 +14,17 @@ urlpatterns = [
     path('message', views.message_admin, name='message'),
 
     path('employees/<str:emp_id>/delete/', views.employee_delete, name='employee_delete'),
+    path('employees/<str:emp_id>/archive/', views.employee_archive, name='employee_archive'),
+    path('employees/<str:emp_id>/recover/', views.employee_recover, name='employee_recover'),
+    path('employees/<str:emp_id>/reset-password/', views.employee_reset_password, name='employee_reset_password'),
+
+    # NEW: admin time-in / time-out toggle (PST, daily)
+    path(
+        'employees/<str:emp_id>/attendance-toggle/',
+        views.employee_toggle_attendance,
+        name='employee_toggle_attendance'
+    ),
+
     path('messages/<int:pk>/update/', views.message_update_status, name='message_update_status'),
 
     path('employeedash', views.employeedash, name='employeedash'),

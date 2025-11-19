@@ -1,4 +1,4 @@
-{% load static%}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,61 +38,6 @@
       flex-direction: column;
     }
 
-    /* TOP NAV BAR */
-
-    .top-bar {
-      background: var(--blue-main);
-      color: #ffffff;
-      padding: 10px 40px 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
-
-    .brand-left {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .brand-title {
-      font-family: "Times New Roman", serif;
-      font-size: 26px;
-    }
-
-    .brand-subtitle {
-      font-size: 13px;
-    }
-
-    .top-nav {
-      display: flex;
-      gap: 24px;
-      font-size: 14px;
-      align-items: center;
-    }
-
-    .top-nav a {
-      color: #ffffff;
-      text-decoration: none;
-      position: relative;
-      padding-bottom: 2px;
-    }
-
-    .top-nav a::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 0;
-      height: 2px;
-      background: #ffffff;
-      transition: width 0.2s ease;
-    }
-
-    .top-nav a:hover::after {
-      width: 100%;
-    }
-
     /* SECONDARY HEADER */
 
     .sub-bar {
@@ -127,10 +72,10 @@
     }
 
     .sub-logo img {
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      border-radius:50%;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
     }
 
     .sub-text {
@@ -411,7 +356,6 @@
       main {
         padding: 18px 16px 24px;
       }
-      .top-bar,
       .sub-bar,
       footer {
         padding-inline: 16px;
@@ -433,25 +377,12 @@
   </style>
 </head>
 <body>
-  <!-- TOP BAR -->
-  <header class="top-bar">
-    <div class="brand-left">
-      <div class="brand-title">LGU Paombong</div>
-      <div class="brand-subtitle">Human Resource Information System</div>
-    </div>
-
-    <nav class="top-nav">
-      <a href="{% url 'employeedash'%}">Home</a>
-      <a href="{% url 'employeedash'%}">Dashboard</a>
-      <a href="#">Contact us</a>
-    </nav>
-  </header>
 
   <!-- SECONDARY HEADER -->
   <div class="sub-bar">
     <div class="sub-left">
       <div class="sub-logo">
-         <img src="{% static 'accounts/images/HRISLOGO.jpg' %}" alt="HRIS Seal">
+        <img src="{% static 'accounts/images/HRISLOGO.jpg' %}" alt="HRIS Seal">
       </div>
       <div class="sub-text">
         <div class="sub-text-small">Human Resource Information</div>
@@ -530,28 +461,60 @@
           </div>
         </article>
 
-        <!-- Upcoming Events -->
+        <!-- Upcoming Events / Deadlines -->
         <article class="card">
           <h2 class="card-title">Upcoming Events/Deadlines</h2>
           <ul class="card-list">
-            <li>Family Day : September 26, 2025</li>
-            <li>Disaster coordination: Oct 6, 2025</li>
-            <li>Livelihood program launches: Oct 20, 2025</li>
+            {% if pending_activities %}
+              {% for act in pending_activities %}
+                <li>
+                  {{ act.description }}
+                  {% if act.summary.week_end %}
+                    – due by {{ act.summary.week_end|date:"M d, Y" }}
+                  {% endif %}
+                </li>
+              {% endfor %}
+            {% else %}
+              <li>No upcoming tasks or deadlines for now.</li>
+            {% endif %}
           </ul>
         </article>
 
-        <!-- Leave Overview (sample numbers; real leave model not yet implemented) -->
+        <!-- Leave Overview -->
         <article class="card">
           <h2 class="card-title">Leave Overview</h2>
-          <div class="leave-item">
-            <span>Annual Leave Remaining :</span> 15 days
-          </div>
-          <div class="leave-item">
-            <span>Sick Leave Remaining :</span> 8 days
-          </div>
-          <div class="leave-item">
-            <span>Pending Leave Requests :</span> 2
-          </div>
+
+          {% if is_regular %}
+            <div class="leave-item">
+              <span>Annual Sick Leave:</span>
+              {{ sick_annual }} days
+            </div>
+
+            <div class="leave-item">
+              <span>Total Lates This Year:</span>
+              {{ total_lates }}
+            </div>
+
+            <div class="leave-item">
+              <span>Total Absences This Year:</span>
+              {{ total_absents }}
+            </div>
+
+            <div class="leave-item">
+              <span>Sick Leave Deducted (from lates/absences):</span>
+              {{ sick_days_deducted }} days
+            </div>
+
+            <div class="leave-item">
+              <span>Sick Leave Remaining:</span>
+              {{ sick_remaining }} days
+            </div>
+          {% else %}
+            <div class="leave-item">
+              <span>Sick Leave:</span>
+              Not applicable for Job Order employees.
+            </div>
+          {% endif %}
         </article>
 
         <!-- Latest Announcements -->

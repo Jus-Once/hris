@@ -16,6 +16,7 @@
       --red: #d42e2e;
       --blue-main: #003b8e;
       --gray-text: #555;
+      --logout-bg: #f0f0f0;
     }
 
     *{margin:0;padding:0;box-sizing:border-box;}
@@ -29,12 +30,13 @@
       flex-direction:column;
     }
 
-    /* HEADER */
+    /* HEADER (same style as admindash) */
     .header{
       padding:12px 40px 6px;
       display:flex;
       justify-content:space-between;
       align-items:center;
+      background:#ffffff;
     }
     .header-left{
       display:flex;
@@ -56,6 +58,7 @@
     .header-right{
       display:flex;
       align-items:center;
+      gap:18px;
     }
     .user-outline{
       width:34px;
@@ -67,18 +70,24 @@
       align-items:center;
       font-size:18px;
     }
-    .divider{
+    .header-divider{
       border:none;
       border-top:1px solid #cccccc;
       margin:0 40px;
     }
 
-    /* TAB BAR */
+    /* TABS + LOGOUT (mirror admindash) */
     .tab-bar{
       padding:10px 40px 4px;
       display:flex;
       align-items:center;
-      gap:28px;
+      justify-content:space-between;
+      background:#ffffff;
+    }
+    .tabs-left{
+      display:flex;
+      gap:24px;
+      font-size:16px;
     }
     .tab{
       position:relative;
@@ -109,6 +118,16 @@
       height:2px;
       background:#000;
     }
+
+    .logout-btn {
+      padding:6px 20px;
+      background: var(--logout-bg);
+      border-radius:999px;
+      border:1px solid #cccccc;
+      cursor:pointer;
+      font-size:14px;
+    }
+
     .divider-light{
       border:none;
       border-top:1px solid #cccccc;
@@ -199,6 +218,7 @@
       justify-content:space-between;
       align-items:flex-start;
       margin-bottom:10px;
+      gap:12px;
     }
     .directory-title{
       font-size:22px;
@@ -210,6 +230,9 @@
     .directory-actions{
       display:flex;
       gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
     }
     .btn{
       padding:8px 20px;
@@ -222,6 +245,11 @@
     .btn-dark{
       background:#000;
       color:#fff;
+    }
+    .btn-ghost{
+      background:#f5f5f5;
+      border-color:#ccc;
+      font-size:13px;
     }
 
     table{
@@ -236,6 +264,7 @@
     th,td{
       padding:8px 6px;
       text-align:left;
+      vertical-align:middle;
     }
     tbody tr{
       border-bottom:1px solid #e3e3e3;
@@ -249,14 +278,55 @@
       font-weight:600;
     }
 
-    .delete-btn {
-      padding:4px 12px;
-      background:#d42e2e;
-      color:white;
-      border:none;
+    .row-actions{
+      display:flex;
+      gap:4px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .mini-btn{
+      padding:4px 8px;
       border-radius:4px;
+      border:1px solid #000;
+      background:#fff;
+      font-size:12px;
       cursor:pointer;
-      font-size:13px;
+    }
+    .mini-btn-secondary{
+      border-color:#666;
+      color:#333;
+    }
+    .mini-btn-danger{
+      background:#d42e2e;
+      border-color:#b00000;
+      color:white;
+    }
+    .mini-btn-soft{
+      background:#f3f3f3;
+      border-color:#ccc;
+    }
+
+    /* ATTENDANCE BUTTON */
+    .attendance-btn{
+      border-radius:999px;
+      min-width:80px;
+      text-align:center;
+    }
+    .attendance-btn-in{
+      background:#16a34a;
+      border-color:#0f7a34;
+      color:#ffffff;
+    }
+    .attendance-btn-out{
+      background:#d42e2e;
+      border-color:#b00000;
+      color:#ffffff;
+    }
+    .attendance-btn-complete{
+      background:#e5e5e5;
+      border-color:#c4c4c4;
+      color:#555;
+      cursor:default;
     }
 
     /* FORM SECTION */
@@ -320,6 +390,7 @@
       border-radius:2px;
       font-size:12px;
     }
+
     .form-footer{
       margin-top:26px;
       display:flex;
@@ -341,6 +412,51 @@
       color:#fff;
     }
 
+    /* Logout modal (same pattern as admindash) */
+    .logout-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(6px);
+      background: rgba(255, 255, 255, 0.3);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .logout-modal {
+      background: white;
+      padding: 25px 35px;
+      border-radius: 18px;
+      border: 2px solid #000;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      font-size: 20px;
+    }
+
+    .logout-modal .logout-yes {
+      background: #0048ff;
+      color: white;
+      padding: 6px 20px;
+      border-radius: 10px;
+      border: 2px solid #000;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    .logout-modal .logout-no {
+      background: white;
+      padding: 6px 18px;
+      margin-left: 10px;
+      border-radius: 10px;
+      border: 2px solid #000;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
     @media(max-width:950px){
       .emp-layout{
         grid-template-columns:1fr;
@@ -351,7 +467,7 @@
       .tab-bar{
         padding-inline:18px;
       }
-      .divider,
+      .header-divider,
       .divider-light,
       main{
         margin-inline:18px;
@@ -375,34 +491,38 @@
     </div>
   </header>
 
-  <hr class="divider">
+  <hr class="header-divider">
 
   <!-- TABS -->
   <nav class="tab-bar">
-    <div class="tab">
-      <a href="{% url 'admindash'%}">
-        <span class="tab-icon">▦</span>
-        <span>Dashboard</span>
-      </a>
+    <div class="tabs-left">
+      <div class="tab">
+        <a href="{% url 'admindash'%}">
+          <span class="tab-icon">▦</span>
+          <span>Dashboard</span>
+        </a>
+      </div>
+      <div class="tab active">
+        <a href="{% url 'adminemployee'%}">
+          <span class="tab-icon">👥</span>
+          <span>Employees</span>
+        </a>
+      </div>
+      <div class="tab">
+        <a href="{% url 'time'%}">
+          <span class="tab-icon">⏱</span>
+          <span>Time Tracking</span>
+        </a>
+      </div>
+      <div class="tab">
+        <a href="{% url 'message'%}">
+          <span class="tab-icon">✉</span>
+          <span>Messages</span>
+        </a>
+      </div>
     </div>
-    <div class="tab active">
-      <a href="{% url 'adminemployee'%}">
-        <span class="tab-icon">👥</span>
-        <span>Employees</span>
-      </a>
-    </div>
-    <div class="tab">
-      <a href="{% url 'time'%}">
-        <span class="tab-icon">⏱</span>
-        <span>Time Tracking</span>
-      </a>
-    </div>
-    <div class="tab">
-      <a href="{% url 'message'%}">
-        <span class="tab-icon">✉</span>
-        <span>Messages</span>
-      </a>
-    </div>
+
+    <button class="logout-btn" id="logoutBtnTop">Logout</button>
   </nav>
 
   <hr class="divider-light">
@@ -410,7 +530,9 @@
   <main>
     <!-- EMPLOYEE MANAGEMENT VIEW -->
     <section id="employeeManagement">
-      <h1 class="page-title">Employee Management</h1>
+      <h1 class="page-title">
+        {% if is_archives %}Employee Archives{% else %}Employee Management{% endif %}
+      </h1>
 
       <div class="emp-layout">
         <!-- FILTER CARD -->
@@ -452,6 +574,10 @@
               </div>
             </div>
 
+            {% if is_archives %}
+              <input type="hidden" name="archived" value="1">
+            {% endif %}
+
             <button type="submit" class="btn" style="margin-top:8px;">Apply</button>
           </form>
         </aside>
@@ -460,14 +586,33 @@
         <section class="directory-card">
           <div class="directory-header">
             <div>
-              <div class="directory-title">Employee Directory</div>
-              <div class="directory-sub">Manage all employee information and records</div>
+              <div class="directory-title">
+                {% if is_archives %}Archived Employees{% else %}Employee Directory{% endif %}
+              </div>
+              <div class="directory-sub">
+                {% if is_archives %}
+                  View and manage archived employee records
+                {% else %}
+                  Manage all active employee information and records
+                {% endif %}
+              </div>
             </div>
             <div class="directory-actions">
-              <button id="addEmployeeBtn" class="btn btn-dark"
-                      onclick="window.location.href='{% url 'adminemployee' %}?add=1'">
-                Add Employee
-              </button>
+              {% if is_archives %}
+                <button class="btn btn-ghost"
+                        onclick="window.location.href='{% url 'adminemployee' %}'">
+                  ← Back to Active List
+                </button>
+              {% else %}
+                <button class="btn btn-ghost"
+                        onclick="window.location.href='{% url 'adminemployee' %}?archived=1'">
+                  View Archives
+                </button>
+                <button id="addEmployeeBtn" class="btn btn-dark"
+                        onclick="window.location.href='{% url 'adminemployee' %}?add=1'">
+                  Add Employee
+                </button>
+              {% endif %}
             </div>
           </div>
 
@@ -479,8 +624,8 @@
                 <th style="width:16%">Position</th>
                 <th style="width:18%">Department</th>
                 <th style="width:12%">Status</th>
-                <th style="width:16%">Attendance</th>
-                <th></th>
+                <th style="width:10%">Attendance</th>
+                <th style="width:20%; text-align:right;">Actions</th>
               </tr>
             </thead>
             <tbody id="employeeTableBody">
@@ -494,14 +639,102 @@
                     {{ emp.emp_status }}
                   </td>
                   <td>
-                    <span style="font-size:12px; color:#777;">—</span>
+                    {% if not is_archives %}
+                      <form method="post" action="{% url 'employee_toggle_attendance' emp.emp_id %}">
+                        {% csrf_token %}
+                        {% if emp.today_att %}
+                          {% if emp.today_att.time_in and not emp.today_att.time_out %}
+                            <!-- Already timed in, waiting for time-out -->
+                            <button type="submit"
+                                    class="mini-btn attendance-btn attendance-btn-out">
+                              Time-out
+                            </button>
+                            <div style="font-size:11px;color:#555;margin-top:2px;">
+                              In: {{ emp.today_att.time_in|time:"H:i" }}
+                            </div>
+                          {% elif emp.today_att.time_in and emp.today_att.time_out %}
+                            <!-- Completed for today -->
+                            <button type="button"
+                                    class="mini-btn attendance-btn attendance-btn-complete"
+                                    disabled>
+                              Completed
+                            </button>
+                            <div style="font-size:11px;color:#555;margin-top:2px;">
+                              {{ emp.today_att.hours_worked|default:0|floatformat:2 }} hrs
+                            </div>
+                          {% else %}
+                            <!-- Fallback: record exists but time_in missing -->
+                            <button type="submit"
+                                    class="mini-btn attendance-btn attendance-btn-in">
+                              Time-in
+                            </button>
+                          {% endif %}
+                        {% else %}
+                          <!-- No record yet for today -->
+                          <button type="submit"
+                                  class="mini-btn attendance-btn attendance-btn-in">
+                            Time-in
+                          </button>
+                        {% endif %}
+                      </form>
+                    {% else %}
+                      <span style="font-size:12px; color:#777;">—</span>
+                    {% endif %}
                   </td>
                   <td>
-                    <form method="post" action="{% url 'employee_delete' emp.emp_id %}"
-                          onsubmit="return confirm('Delete employee {{ emp.emp_id }}?');">
-                      {% csrf_token %}
-                      <button type="submit" class="delete-btn">Delete</button>
-                    </form>
+                    <div class="row-actions">
+                      {% if not is_archives %}
+                        <!-- Edit -->
+                        <a href="{% url 'adminemployee' %}?edit={{ emp.emp_id }}"
+                           class="mini-btn mini-btn-soft">
+                          Edit
+                        </a>
+
+                        <!-- Reset Password -->
+                        <form method="post"
+                              action="{% url 'employee_reset_password' emp.emp_id %}">
+                          {% csrf_token %}
+                          <button type="submit"
+                                  class="mini-btn mini-btn-secondary"
+                                  onclick="return confirm('Reset password for {{ emp.emp_id }} to default ({{ emp.emp_id }})?');">
+                            Reset Password
+                          </button>
+                        </form>
+
+                        <!-- Archive -->
+                        <form method="post"
+                              action="{% url 'employee_archive' emp.emp_id %}">
+                          {% csrf_token %}
+                          <button type="submit"
+                                  class="mini-btn mini-btn-danger"
+                                  onclick="return confirm('Archive employee {{ emp.emp_id }}?');">
+                            Archive
+                          </button>
+                        </form>
+                      {% else %}
+                        <!-- Recover -->
+                        <form method="post"
+                              action="{% url 'employee_recover' emp.emp_id %}">
+                          {% csrf_token %}
+                          <button type="submit"
+                                  class="mini-btn mini-btn-secondary"
+                                  onclick="return confirm('Recover employee {{ emp.emp_id }} to active list?');">
+                            Recover
+                          </button>
+                        </form>
+
+                        <!-- Permanent Delete -->
+                        <form method="post"
+                              action="{% url 'employee_delete' emp.emp_id %}">
+                          {% csrf_token %}
+                          <button type="submit"
+                                  class="mini-btn mini-btn-danger"
+                                  onclick="return confirm('Permanently delete employee {{ emp.emp_id }}? This cannot be undone.');">
+                            Delete
+                          </button>
+                        </form>
+                      {% endif %}
+                    </div>
                   </td>
                 </tr>
               {% empty %}
@@ -521,7 +754,9 @@
     <section id="employeeFormSection" {% if not show_form %}style="display:none"{% endif %}>
       <div class="form-top">
         <div class="back-circle" onclick="window.location.href='{% url 'adminemployee' %}'">&#8592;</div>
-        <h2 class="form-title">Employees Information</h2>
+        <h2 class="form-title">
+          {% if edit_employee %}Edit Employee Information{% else %}Add Employee{% endif %}
+        </h2>
       </div>
 
       <div class="form-inner">
@@ -532,114 +767,205 @@
 
         <form id="employeeForm" method="post" action="{% url 'adminemployee' %}">
           {% csrf_token %}
+          {% if edit_employee %}
+            <input type="hidden" name="edit_emp_id" value="{{ edit_employee.emp_id }}">
+          {% endif %}
+
           <div class="form-grid">
             <!-- PERSONAL INFO -->
             <div class="field">
               <label for="firstName">First Name</label>
-              <input id="firstName" name="fname" type="text" placeholder="Juan" required>
+              <input id="firstName" name="fname" type="text" placeholder="Juan"
+                     value="{% if edit_employee %}{{ edit_employee.fname }}{% endif %}" required>
             </div>
             <div class="field">
               <label for="lastName">Last Name</label>
-              <input id="lastName" name="lname" type="text" placeholder="Dela Cruz" required>
+              <input id="lastName" name="lname" type="text" placeholder="Dela Cruz"
+                     value="{% if edit_employee %}{{ edit_employee.lname }}{% endif %}" required>
             </div>
 
+            <!-- Employee ID (readonly info display only) -->
             <div class="field">
-              <label for="empId">Employee ID</label>
-              <input id="empId" name="emp_id" type="text" placeholder="EMP005" required>
-            </div>
-            <div class="field">
-              <label for="position">Position / Job Title</label>
-              <input id="position" name="position" type="text" placeholder="Administrative Aide" required>
-            </div>
-
-            <div class="field">
-              <label for="email">Work Email Address</label>
-              <input id="email" name="email" type="email" placeholder="juan.delacruz@lgu.gov.ph" required>
-            </div>
-            <div class="field">
-              <label for="department">Department / Office</label>
-              <input id="department" name="department" type="text" placeholder="Human Resource Management Office" required>
+              <label>Employee ID</label>
+              <input type="text"
+                     value="{% if edit_employee %}{{ edit_employee.emp_id }}{% else %}{{ next_emp_id }}{% endif %}"
+                     readonly>
             </div>
 
-            <div class="field">
-              <label for="phone">Mobile Number</label>
-              <input id="phone" name="phone" type="text" placeholder="09XX-XXX-XXXX">
-            </div>
-            <div class="field">
-              <label for="salaryGrade">Salary Grade</label>
-              <input id="salaryGrade" name="salary_grade" type="text" placeholder="e.g. SG-11">
-            </div>
-
-            <div class="field">
-              <label for="birthday">Date of Birth</label>
-              <input id="birthday" name="birthday" type="date">
-            </div>
-            <div class="field">
-              <label for="dateHired">Date Hired</label>
-              <input id="dateHired" name="dateHired" type="date">
-            </div>
-
-            <div class="field">
-              <label for="civilStatus">Civil Status</label>
-              <select id="civilStatus" name="civil_status">
-                <option value="">Select Status</option>
-                <option value="Single">Single</option>
-                <option value="Married">Married</option>
-                <option value="Separated">Separated</option>
-                <option value="Widowed">Widowed</option>
-              </select>
-            </div>
+            <!-- Employment Status (on top of department/position) -->
             <div class="field">
               <label for="employmentStatus">Employment Status</label>
               <select id="employmentStatus" name="employment_status" required>
                 <option value="">Select Status</option>
-                <option value="Regular">Regular</option>
-                <option value="Job Order">Job Order</option>
+                <option value="Regular"
+                  {% if edit_employee and edit_employee.emp_status == 'Regular' %}selected{% endif %}>
+                  Regular
+                </option>
+                <option value="Job Order"
+                  {% if edit_employee and edit_employee.emp_status == 'Job Order' %}selected{% endif %}>
+                  Job Order
+                </option>
+              </select>
+            </div>
+
+            <!-- Work Email -->
+            <div class="field">
+              <label for="email">Work Email Address</label>
+              <input id="email" name="email" type="email" placeholder="juan.delacruz@lgu.gov.ph"
+                     value="{% if edit_employee %}{{ edit_employee.email }}{% endif %}" required>
+            </div>
+
+            <!-- Department / Office -->
+            <div class="field">
+              <label for="department">Department / Office</label>
+              <select id="department" name="department" data-current="{% if edit_employee %}{{ edit_employee.dept }}{% endif %}">
+                <option value="">Select Department / Office</option>
+                <option value="Office of the Municipal Mayor">Office of the Municipal Mayor</option>
+                <option value="Office of the Municipal Administrator">Office of the Municipal Administrator</option>
+                <option value="Office of the Municipal Vice Mayor">Office of the Municipal Vice Mayor</option>
+                <option value="Office of the Municipal HRMO">Office of the Municipal HRMO</option>
+                <option value="Public Employment Service Office">Public Employment Service Office</option>
+                <option value="Office on Public Affairs & Information Assistance">Office on Public Affairs &amp; Information Assistance</option>
+                <option value="Business Permit and Licensing Office">Business Permit and Licensing Office</option>
+                <option value="Sangguniang Bayan Members">Sangguniang Bayan Members</option>
+                <option value="Office of the Secretary to the Sangguniang Bayan">Office of the Secretary to the Sangguniang Bayan</option>
+                <option value="Office of the Municipal Budget">Office of the Municipal Budget</option>
+                <option value="Office of the Municipal Planning & Development Coordinator">Office of the Municipal Planning &amp; Development Coordinator</option>
+                <option value="Office of the Municipal Accountant">Office of the Municipal Accountant</option>
+                <option value="Office of the Municipal General Services">Office of the Municipal General Services</option>
+                <option value="Local Youth Development Office">Local Youth Development Office</option>
+                <option value="Office of the Municipal Treasurer">Office of the Municipal Treasurer</option>
+                <option value="Market / Fishport">Market / Fishport</option>
+                <option value="Office of the Municipal Assessor">Office of the Municipal Assessor</option>
+                <option value="Office of the Municipal Health Officer">Office of the Municipal Health Officer</option>
+                <option value="Nutrition Office">Nutrition Office</option>
+                <option value="Office of the Municipal Civil Registrar">Office of the Municipal Civil Registrar</option>
+                <option value="Office of the Municipal Social Welfare and Development Officer">Office of the Municipal Social Welfare and Development Officer</option>
+                <option value="Office of the Municipal Agriculture">Office of the Municipal Agriculture</option>
+                <option value="Office of the MENRO">Office of the MENRO</option>
+                <option value="Office of the Municipal Disaster Risk Reduction & Management Officer">Office of the Municipal Disaster Risk Reduction &amp; Management Officer</option>
+                <option value="Office of the Municipal Engineer">Office of the Municipal Engineer</option>
+              </select>
+            </div>
+
+            <!-- Position / Job Title (dynamic based on department) -->
+            <div class="field">
+              <label for="position">Position / Job Title</label>
+              <select id="position" name="position" data-current="{% if edit_employee %}{{ edit_employee.position }}{% endif %}">
+                <option value="">Select Position</option>
+              </select>
+            </div>
+
+            <!-- Mobile Number -->
+            <div class="field">
+              <label for="phone">Mobile Number</label>
+              <input id="phone" name="phone" type="text" placeholder="09XX-XXX-XXXX"
+                     value="{% if edit_employee %}{{ edit_employee.phone }}{% endif %}" required>
+            </div>
+
+            <!-- Salary Grade textbox (readonly, auto from position) -->
+            <div class="field">
+              <label for="salaryGradeDisplay">Salary Grade (Regular)</label>
+              <input id="salaryGradeDisplay" name="salary_grade" type="text"
+                     value="{% if edit_employee %}{{ edit_employee.salary_grade }}{% endif %}"
+                     readonly>
+            </div>
+
+            <!-- JO Daily Rate -->
+            <div class="field">
+              <label for="joDailyRate">Job Order Daily Rate (₱)</label>
+              <input id="joDailyRate" name="jo_daily_rate" type="number"
+                     min="0" step="100"
+                     value="{% if edit_employee and edit_employee.jo_daily_rate %}{{ edit_employee.jo_daily_rate }}{% endif %}">
+            </div>
+
+            <!-- Date of Birth -->
+            <div class="field">
+              <label for="birthday">Date of Birth</label>
+              <input id="birthday" name="birthday" type="date"
+                     value="{% if edit_employee and edit_employee.dob %}{{ edit_employee.dob|date:'Y-m-d' }}{% endif %}" required>
+            </div>
+
+            <!-- Date Hired -->
+            <div class="field">
+              <label for="dateHired">Date Hired</label>
+              <input id="dateHired" name="dateHired" type="date"
+                     value="{% if edit_employee and edit_employee.date_hired %}{{ edit_employee.date_hired|date:'Y-m-d' }}{% endif %}" required>
+            </div>
+
+            <!-- Civil Status -->
+            <div class="field">
+              <label for="civilStatus">Civil Status</label>
+              <select id="civilStatus" name="civil_status" required>
+                <option value="">Select Status</option>
+                <option value="Single"
+                  {% if edit_employee and edit_employee.civil_status == 'Single' %}selected{% endif %}>
+                  Single
+                </option>
+                <option value="Married"
+                  {% if edit_employee and edit_employee.civil_status == 'Married' %}selected{% endif %}>
+                  Married
+                </option>
+                <option value="Separated"
+                  {% if edit_employee and edit_employee.civil_status == 'Separated' %}selected{% endif %}>
+                  Separated
+                </option>
+                <option value="Widowed"
+                  {% if edit_employee and edit_employee.civil_status == 'Widowed' %}selected{% endif %}>
+                  Widowed
+                </option>
               </select>
             </div>
 
             <!-- ADDRESS + EMERGENCY CONTACT -->
             <div class="field">
               <label for="street">Street Address</label>
-              <input id="street" name="street" type="text" placeholder="House/Lot No., Street Name">
+              <input id="street" name="street" type="text" placeholder="House/Lot No., Street Name"
+                     value="{% if edit_employee %}{{ edit_employee.address }}{% endif %}" required>
             </div>
             <div class="field">
               <label for="contactName">Emergency Contact Name</label>
-              <input id="contactName" name="contactName" type="text" placeholder="Full Name of Emergency Contact">
+              <input id="contactName" name="contactName" type="text" placeholder="Full Name of Emergency Contact"
+                     value="{% if edit_employee %}{{ edit_employee.emc_name }}{% endif %}" required>
             </div>
 
             <div class="field">
               <label for="barangay">Barangay</label>
-              <input id="barangay" name="barangay" type="text" placeholder="Barangay">
+              <input id="barangay" name="barangay" type="text" placeholder="Barangay"
+                     value="{% if edit_employee %}{{ edit_employee.brgy }}{% endif %}" required>
             </div>
             <div class="field">
               <label for="relationship">Relationship to Employee</label>
-              <select id="relationship" name="relationship">
+              <select id="relationship" name="relationship" required>
                 <option value="">Select Relationship</option>
-                <option>Parent</option>
-                <option>Sibling</option>
-                <option>Spouse</option>
-                <option>Relative</option>
-                <option>Friend</option>
+                <option {% if edit_employee and edit_employee.emc_relation == 'Parent' %}selected{% endif %}>Parent</option>
+                <option {% if edit_employee and edit_employee.emc_relation == 'Sibling' %}selected{% endif %}>Sibling</option>
+                <option {% if edit_employee and edit_employee.emc_relation == 'Spouse' %}selected{% endif %}>Spouse</option>
+                <option {% if edit_employee and edit_employee.emc_relation == 'Relative' %}selected{% endif %}>Relative</option>
+                <option {% if edit_employee and edit_employee.emc_relation == 'Friend' %}selected{% endif %}>Friend</option>
               </select>
             </div>
 
             <div class="field">
               <label for="municipality">Municipality/City</label>
-              <input id="municipality" name="municipality" type="text" placeholder="Municipality/City">
+              <input id="municipality" name="municipality" type="text" placeholder="Municipality/City"
+                     value="{% if edit_employee %}{{ edit_employee.city }}{% endif %}" required>
             </div>
             <div class="field">
               <label for="contactPhone">Emergency Contact Number</label>
-              <input id="contactPhone" name="contactPhone" type="text" placeholder="Emergency contact phone number">
+              <input id="contactPhone" name="contactPhone" type="text" placeholder="Emergency contact phone number"
+                     value="{% if edit_employee %}{{ edit_employee.emc_phone }}{% endif %}" required>
             </div>
 
             <div class="field">
               <label for="province">Province</label>
-              <input id="province" name="province" type="text" placeholder="Province">
+              <input id="province" name="province" type="text" placeholder="Province"
+                     value="{% if edit_employee %}{{ edit_employee.province }}{% endif %}" required>
             </div>
             <div class="field">
               <label for="zip">Zip Code</label>
-              <input id="zip" name="zip" type="text" placeholder="Zip Code">
+              <input id="zip" name="zip" type="text" placeholder="Zip Code"
+                     value="{% if edit_employee %}{{ edit_employee.zipcode }}{% endif %}" required>
             </div>
           </div>
 
@@ -652,5 +978,312 @@
     </section>
   </main>
 
+  <!-- LOGOUT MODAL -->
+  <div class="logout-backdrop" id="logoutBackdrop">
+    <div class="logout-modal">
+      <p>Are you sure you want to<br>logout?</p>
+      <br>
+      <button class="logout-yes" onclick="confirmLogout()">Logout</button>
+      <button class="logout-no" onclick="closeLogoutModal()">No</button>
+    </div>
+  </div>
+
+  <script>
+    // Logout modal behaviour
+    const logoutBtn = document.getElementById("logoutBtnTop");
+    const logoutBackdrop = document.getElementById("logoutBackdrop");
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        logoutBackdrop.style.display = "flex";
+      });
+    }
+
+    function closeLogoutModal() {
+      logoutBackdrop.style.display = "none";
+    }
+
+    function confirmLogout() {
+      window.location.href = "{% url 'adminlogout' %}";
+    }
+
+    // ----- Dynamic positions + SG mapping by department -----
+    const deptPositionMap = {
+      "Office of the Municipal Mayor": [
+        { value: "Administrative Aide I (Utility Worker I)", label: "Administrative Aide I (Utility Worker I)", sg: "SG-1" },
+        { value: "Senior Administrative Assistant II / Private Secretary II", label: "Senior Administrative Assistant II / Private Secretary II", sg: "SG-18" },
+        { value: "Administrative Aide IV (Driver II)", label: "Administrative Aide IV (Driver II)", sg: "SG-4" },
+        { value: "Security Officer III", label: "Security Officer III", sg: "SG-18" },
+        { value: "Barangay Health Aide", label: "Barangay Health Aide", sg: "SG-4" }
+      ],
+      "Office of the Municipal Administrator": [
+        { value: "MGDH I (Municipal Administrator)", label: "MGDH I (Municipal Administrator)", sg: "SG-24" },
+        { value: "Waterworks Supervisor", label: "Waterworks Supervisor", sg: "SG-14" },
+        { value: "Population Program Worker II", label: "Population Program Worker II", sg: "SG-7" }
+      ],
+      "Office of the Municipal Vice Mayor": [
+        { value: "Municipal Vice Mayor", label: "Municipal Vice Mayor", sg: "SG-25" }
+      ],
+      "Office of the Municipal HRMO": [
+        { value: "MGDH I (Human Resource Management Officer)", label: "MGDH I (Human Resource Management Officer)", sg: "SG-24" }
+      ],
+      "Public Employment Service Office": [
+        { value: "Senior Labor and Employment Officer", label: "Senior Labor and Employment Officer", sg: "SG-19" }
+      ],
+      "Office on Public Affairs & Information Assistance": [
+        { value: "Barangay Health Aide", label: "Barangay Health Aide", sg: "SG-4" }
+      ],
+      "Business Permit and Licensing Office": [
+        { value: "Senior Administrative Assistant II (Data Controller III)", label: "Senior Administrative Assistant II (Data Controller III)", sg: "SG-15" }
+      ],
+      "Sangguniang Bayan Members": [
+        { value: "Sangguniang Bayan Member", label: "Sangguniang Bayan Member", sg: "SG-24" }
+      ],
+      "Office of the Secretary to the Sangguniang Bayan": [
+        { value: "Secretary to the Sangguniang Bayan", label: "Secretary to the Sangguniang Bayan", sg: "SG-24" },
+        { value: "Local Legislative Staff Officer III", label: "Local Legislative Staff Officer III", sg: "SG-18" },
+        { value: "Local Legislative Staff Officer II", label: "Local Legislative Staff Officer II", sg: "SG-11" },
+        { value: "Local Legislative Staff Assistant I", label: "Local Legislative Staff Assistant I", sg: "SG-8" },
+        { value: "Local Legislative Staff Employee II", label: "Local Legislative Staff Employee II", sg: "SG-4" },
+        { value: "Administrative Aide II (Bookbinder II)", label: "Administrative Aide II (Bookbinder II)", sg: "SG-2" }
+      ],
+      "Office of the Municipal Budget": [
+        { value: "Municipal Budget Officer", label: "Municipal Budget Officer", sg: "SG-24" },
+        { value: "Administrative Aide IV (Budgeting Aide)", label: "Administrative Aide IV (Budgeting Aide)", sg: "SG-4" },
+        { value: "Administrative Aide I (Utility Worker I)", label: "Administrative Aide I (Utility Worker I)", sg: "SG-1" }
+      ],
+      "Office of the Municipal Planning & Development Coordinator": [
+        { value: "MGDH II (Municipal Planning & Development Coordinator)", label: "MGDH II (Municipal Planning & Development Coordinator)", sg: "SG-24" },
+        { value: "Administrative Officer I (Planning Officer I)", label: "Administrative Officer I (Planning Officer I)", sg: "SG-11" },
+        { value: "Administrative Aide IV (Clerk II)", label: "Administrative Aide IV (Clerk II)", sg: "SG-4" },
+        { value: "Administrative Aide I (Utility Worker I)", label: "Administrative Aide I (Utility Worker I)", sg: "SG-1" }
+      ],
+      "Office of the Municipal Accountant": [
+        { value: "Administrative Officer V (Municipal Accountant)", label: "Administrative Officer V (Municipal Accountant)", sg: "SG-18" },
+        { value: "Administrative Aide IV (Clerk II)", label: "Administrative Aide IV (Clerk II)", sg: "SG-4" },
+        { value: "Administrative Assistant III (Bookkeeper II)", label: "Administrative Assistant III (Bookkeeper II)", sg: "SG-9" },
+        { value: "Administrative Aide I (Utility Worker I)", label: "Administrative Aide I (Utility Worker I)", sg: "SG-1" }
+      ],
+      "Office of the Municipal General Services": [
+        { value: "Administrative Aide I (Utility Worker I)", label: "Administrative Aide I (Utility Worker I)", sg: "SG-1" },
+        { value: "Administrative Aide IV (Driver II)", label: "Administrative Aide IV (Driver II)", sg: "SG-4" },
+        { value: "Water Pump Operator", label: "Water Pump Operator", sg: "SG-4" }
+      ],
+      "Local Youth Development Office": [
+        { value: "Youth Development Officer I", label: "Youth Development Officer I", sg: "SG-10" }
+      ],
+      "Office of the Municipal Treasurer": [
+        { value: "Municipal Treasurer II", label: "Municipal Treasurer II", sg: "SG-24" },
+        { value: "Cemetery Caretaker", label: "Cemetery Caretaker", sg: "SG-3" },
+        { value: "Administrative Aide IV (Clerk II)", label: "Administrative Aide IV (Clerk II)", sg: "SG-4" },
+        { value: "Administrative Officer III (Cashier II)", label: "Administrative Officer III (Cashier II)", sg: "SG-14" },
+        { value: "Revenue Collection Clerk II", label: "Revenue Collection Clerk II", sg: "SG-7" },
+        { value: "Revenue Collection Clerk I", label: "Revenue Collection Clerk I", sg: "SG-5" },
+        { value: "Administrative Aide VI (Cash Clerk III)", label: "Administrative Aide VI (Cash Clerk III)", sg: "SG-6" }
+      ],
+      "Market / Fishport": [
+        { value: "Administrative Aide I (Utility Worker I)", label: "Administrative Aide I (Utility Worker I)", sg: "SG-1" }
+      ],
+      "Office of the Municipal Assessor": [
+        { value: "Municipal Assessor II", label: "Municipal Assessor II", sg: "SG-24" },
+        { value: "Assessment Clerk I", label: "Assessment Clerk I", sg: "SG-6" },
+        { value: "Administrative Aide I (Utility Worker I)", label: "Administrative Aide I (Utility Worker I)", sg: "SG-1" },
+        { value: "Administrative Aide VI (Equipment Operator II)", label: "Administrative Aide VI (Equipment Operator II)", sg: "SG-8" }
+      ],
+      "Office of the Municipal Health Officer": [
+        { value: "Rural Health Physician", label: "Rural Health Physician", sg: "SG-24" },
+        { value: "Nurse I", label: "Nurse I", sg: "SG-15" },
+        { value: "Midwife II", label: "Midwife II", sg: "SG-11" },
+        { value: "Medical Technologist I", label: "Medical Technologist I", sg: "SG-11" },
+        { value: "Ambulance Driver", label: "Ambulance Driver", sg: "SG-4" },
+        { value: "Administrative Aide I (Utility Worker I)", label: "Administrative Aide I (Utility Worker I)", sg: "SG-1" },
+        { value: "Sanitation Inspector I", label: "Sanitation Inspector I", sg: "SG-9" }
+      ],
+      "Nutrition Office": [
+        { value: "Nutrition Officer II", label: "Nutrition Officer II", sg: "SG-15" },
+        { value: "Barangay Health Aide", label: "Barangay Health Aide", sg: "SG-4" }
+      ],
+      "Office of the Municipal Civil Registrar": [
+        { value: "Municipal Civil Registrar II", label: "Municipal Civil Registrar II", sg: "SG-24" },
+        { value: "Administrative Aide IV (Bookbinder II)", label: "Administrative Aide IV (Bookbinder II)", sg: "SG-4" },
+        { value: "Water Pump Operator", label: "Water Pump Operator", sg: "SG-4" }
+      ],
+      "Office of the Municipal Social Welfare and Development Officer": [
+        { value: "Municipal Social Welfare and Development Officer", label: "Municipal Social Welfare and Development Officer", sg: "SG-24" },
+        { value: "Municipal Social Welfare Assistant", label: "Municipal Social Welfare Assistant", sg: "SG-8" },
+        { value: "Day Care Worker I", label: "Day Care Worker I", sg: "SG-6" }
+      ],
+      "Office of the Municipal Agriculture": [
+        { value: "Municipal Agricultural Officer", label: "Municipal Agricultural Officer", sg: "SG-20" },
+        { value: "Agricultural Technologist", label: "Agricultural Technologist", sg: "SG-10" },
+        { value: "Administrative Aide I (Utility Worker I)", label: "Administrative Aide I (Utility Worker I)", sg: "SG-1" }
+      ],
+      "Office of the MENRO": [
+        { value: "Administrative Aide IV (Records Officer II)", label: "Administrative Aide IV (Records Officer II)", sg: "SG-10" },
+        { value: "Administrative Aide I (Utility Worker I)", label: "Administrative Aide I (Utility Worker I)", sg: "SG-1" }
+      ],
+      "Office of the Municipal Disaster Risk Reduction & Management Officer": [
+        { value: "Municipal Disaster Risk Reduction and Management Officer", label: "Municipal Disaster Risk Reduction and Management Officer", sg: "SG-24" },
+        { value: "Administrative Aide IV (Computer Operator II)", label: "Administrative Aide IV (Computer Operator II)", sg: "SG-6" },
+        { value: "Local Disaster Risk Reduction & Management Assistant", label: "Local Disaster Risk Reduction & Management Assistant", sg: "SG-8" }
+      ],
+      "Office of the Municipal Engineer": [
+        { value: "Administrative Aide I (Utility Worker I)", label: "Administrative Aide I (Utility Worker I)", sg: "SG-1" }
+      ]
+    };
+
+    const employmentStatusEl = document.getElementById("employmentStatus");
+    const departmentEl = document.getElementById("department");
+    const positionEl = document.getElementById("position");
+    const salaryGradeDisplayEl = document.getElementById("salaryGradeDisplay");
+    const joRateEl = document.getElementById("joDailyRate");
+    const employeeForm = document.getElementById("employeeForm");
+
+    function populatePositions() {
+      if (!departmentEl || !positionEl) return;
+
+      const dept = departmentEl.value || departmentEl.getAttribute("data-current") || "";
+      const currentPos = positionEl.getAttribute("data-current") || positionEl.value;
+      const list = deptPositionMap[dept] || [];
+
+      positionEl.innerHTML = "";
+      const defaultOpt = document.createElement("option");
+      defaultOpt.value = "";
+      defaultOpt.textContent = "Select Position";
+      positionEl.appendChild(defaultOpt);
+
+      let foundSG = "";
+
+      list.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item.value;
+        opt.textContent = item.label;
+        if (currentPos && currentPos === item.value) {
+          opt.selected = true;
+          foundSG = item.sg;
+        }
+        positionEl.appendChild(opt);
+      });
+
+      if (!list.length && currentPos && !foundSG) {
+        const opt = document.createElement("option");
+        opt.value = currentPos;
+        opt.textContent = currentPos;
+        opt.selected = true;
+        positionEl.appendChild(opt);
+      }
+
+      if (foundSG && salaryGradeDisplayEl && employmentStatusEl.value === "Regular") {
+        salaryGradeDisplayEl.value = foundSG;
+      }
+    }
+
+    function handlePositionChange() {
+      if (!departmentEl || !positionEl || !salaryGradeDisplayEl) return;
+      const dept = departmentEl.value;
+      const pos = positionEl.value;
+      const list = deptPositionMap[dept] || [];
+      const found = list.find(item => item.value === pos);
+      salaryGradeDisplayEl.value = found ? found.sg : "";
+    }
+
+    function updateEmploymentFields() {
+      if (!employmentStatusEl || !departmentEl || !positionEl || !joRateEl) return;
+      const val = employmentStatusEl.value;
+      const isJO = (val === "Job Order");
+      const isRegular = (val === "Regular");
+
+      departmentEl.disabled = isJO;
+      positionEl.disabled = isJO;
+
+      if (salaryGradeDisplayEl) {
+        salaryGradeDisplayEl.readOnly = true;
+        if (isJO) {
+          salaryGradeDisplayEl.value = "";
+        }
+      }
+
+      joRateEl.disabled = !isJO;
+
+      if (isJO) {
+        joRateEl.required = true;
+        departmentEl.required = false;
+        positionEl.required = false;
+      } else if (isRegular) {
+        joRateEl.required = false;
+        joRateEl.value = "";
+        departmentEl.required = true;
+        positionEl.required = true;
+      } else {
+        joRateEl.required = false;
+        departmentEl.required = false;
+        positionEl.required = false;
+      }
+    }
+
+    if (departmentEl) {
+      departmentEl.addEventListener("change", () => {
+        departmentEl.setAttribute("data-current", departmentEl.value);
+        populatePositions();
+        handlePositionChange();
+      });
+    }
+    if (positionEl) {
+      positionEl.addEventListener("change", handlePositionChange);
+    }
+    if (employmentStatusEl) {
+      employmentStatusEl.addEventListener("change", () => {
+        updateEmploymentFields();
+        if (employmentStatusEl.value === "Regular") {
+          populatePositions();
+          handlePositionChange();
+        } else if (employmentStatusEl.value === "Job Order" && salaryGradeDisplayEl) {
+          salaryGradeDisplayEl.value = "";
+        }
+      });
+    }
+
+    // Initial setup on page load
+    window.addEventListener("DOMContentLoaded", () => {
+      populatePositions();
+      handlePositionChange();
+      updateEmploymentFields();
+    });
+
+    // Extra validation before submit:
+    if (employeeForm) {
+      employeeForm.addEventListener("submit", (e) => {
+        if (!employmentStatusEl) return;
+
+        const statusVal = employmentStatusEl.value;
+        if (!statusVal) {
+          alert("Please select employment status.");
+          e.preventDefault();
+          return;
+        }
+
+        if (statusVal === "Job Order") {
+          if (!joRateEl.value) {
+            alert("Please enter Job Order daily rate.");
+            e.preventDefault();
+            return;
+          }
+        }
+
+        if (statusVal === "Regular") {
+          if (!departmentEl.value || !positionEl.value) {
+            alert("Please select Department and Position for Regular employees.");
+            e.preventDefault();
+            return;
+          }
+          if (salaryGradeDisplayEl && !salaryGradeDisplayEl.value) {
+            alert("Salary Grade must be set for Regular employees (auto from position).");
+            e.preventDefault();
+            return;
+          }
+        }
+      });
+    }
+  </script>
 </body>
 </html>

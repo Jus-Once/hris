@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -80,6 +82,22 @@ class Employee(models.Model):
         verbose_name="Emergency Contact Phone",
         blank=True,
     )
+
+    jo_daily_rate = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    # Current sick leave balance (in days)
+    sick_leave_balance = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+    )
+
+    is_archived = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.emp_id} - {self.fname} {self.lname}"
@@ -264,3 +282,31 @@ class WeeklyActivity(models.Model):
     class Meta:
         db_table = "weekly_activity"
         ordering = ["id"]
+
+
+@receiver(post_save, sender=AttendanceRecord)
+def adjust_sick_leave_for_late_and_absent(sender, instance, created, **kwargs):
+    """
+    On creation of a new AttendanceRecord with status LATE or ABSENT,
+    deduct 0.25 day from the employee's sick_leave_balance.
+    """
+    if not created:
+        return
+
+    if instance.status not in [
+        AttendanceRecord.Status.LATE,
+        AttendanceRecord.Status.ABSENT,
+    ]:
+        return
+
+    employee = instance.employee
+    if not employee:
+        return
+
+    balance = employee.sick_leave_balance or Decimal("0")
+    new_balance = balance - Decimal("0.25")
+    if new_balance < Decimal("0"):
+        new_balance = Decimal("0")
+
+    employee.sick_leave_balance = new_balance
+    employee.save()

@@ -117,7 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"  # you can switch to "Asia/Manila" if you want
+TIME_ZONE = "Asia/Manila"  # you can switch to "Asia/Manila" if you want
 
 USE_I18N = True
 
