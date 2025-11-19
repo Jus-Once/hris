@@ -147,9 +147,9 @@ from django.contrib.auth.models import User
 try:
     if not User.objects.filter(username="admin").exists():
         User.objects.create_superuser(
-            username="admin",
-            email="admin@gmail.com",
-            password="Admin123!"
+            username="depthead01",
+            email="depthead@gmail.com",
+            password="@Admin01"
         )
 except:
     pass
