@@ -92,6 +92,7 @@ DATABASES = {
     )
 }
 
+DATABASES ["default"] = dj_database_url.parse("postgresql://hris_db_g5l9_user:dlNQjKDelZHUyVAzFoUT19RP5DdLNZzn@dpg-d4c0frk9c44c738fdkfg-a.singapore-postgres.render.com/hris_db_g5l9")
 # =========================================================
 # PASSWORD VALIDATION
 # =========================================================
