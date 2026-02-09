@@ -1,6 +1,5 @@
 from django.urls import path
 from . import views
-from .views import create_superuser_once
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -15,7 +14,6 @@ urlpatterns = [
     path('adminemployee', views.adminemployee, name='adminemployee'),
 
     path('employees/', views.employee_list, name='employee_list'),
-    path("create-superuser/", create_superuser_once),
     path('time', views.time_tracking, name='time'),
     path('message', views.message_admin, name='message'),
 

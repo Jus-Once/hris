@@ -996,17 +996,3 @@ def employee_qr_scan(request):
         "error": "Attendance already completed"
     }, status=400)
 
-
-from django.contrib.auth.models import User
-from django.http import HttpResponse
-
-def create_superuser_once(request):
-    if User.objects.filter(username="admin").exists():
-        return HttpResponse("Superuser already exists")
-
-    User.objects.create_superuser(
-        username="Depthead01",
-        email="dept@gmail.com",
-        password="@Admin01"
-    )
-    return HttpResponse("Superuser created")
