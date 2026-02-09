@@ -84,15 +84,19 @@ function onScanSuccess(decodedText) {
         })
             .then(res => res.json())
             .then(data => {
-            if (data.success) {
-                window.location.href = "{% url 'employeedash' %}";
-            }else {
-        alert(data.error || "Attendance failed");
-        startScanner(); // 🔥 restart camera if failed
-                }
-            });
-        });
-    }
+        if (data.success) {
+              alert(data.message); // 👈 THIS is what you were missing
+
+              setTimeout(() => {
+              window.location.href = "{% url 'employeedash' %}";
+          }, 800);
+          } else {
+                alert(data.error || "Attendance failed");
+                startScanner(); // restart scanner if failed
+            }
+          });
+
+        }
 
 // 🔥 ALWAYS start camera on page load
 window.addEventListener("load", startScanner);

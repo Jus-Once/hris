@@ -971,3 +971,25 @@ def employee_qr_submit(request):
     return JsonResponse({
         "error": "Attendance already completed for today."
     }, status=400)
+
+from django.utils.timezone import localtime
+from datetime import datetime, time
+
+def auto_timeout_absentees():
+    now = localtime()
+    today = now.date()
+
+    if now.time() < time(17, 0):  # before 5PM → do nothing
+        return
+
+    records = AttendanceRecord.objects.filter(
+        date=today,
+        time_in__isnull=False,
+        time_out__isnull=True,
+    )
+
+    for att in records:
+        att.time_out = datetime.combine(today, time(17, 0))
+        delta = att.time_out - att.time_in
+        att.hours_worked = round(delta.total_seconds() / 3600, 2)
+        att.save()
