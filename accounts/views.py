@@ -907,7 +907,7 @@ def employee_list(request):
 
 @login_required(login_url="employeelogin")
 def employee_qr_page(request):
-    return render(request, "employee_qr_scan.html")
+    return render(request, "accounts/employee_qr_scan.html")
 
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
