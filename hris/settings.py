@@ -19,18 +19,19 @@ SECRET_KEY = os.getenv(
     "django-insecure-9t7b+=_+$xd+=e&0gft+9grb_u0#kxn@91@9fpzno2ghbu28%4",
 )
 
-DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
+DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 
 # ✅ FIXED: allow local + render
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "hris-4-iqxd.onrender.com",
+    ".onrender.com",
 ]
+
 
 CSRF_TRUSTED_ORIGINS_ENV = os.getenv("CSRF_TRUSTED_ORIGINS", "")
 CSRF_TRUSTED_ORIGINS = [
-    o for o in CSRF_TRUSTED_ORIGINS_ENV.split(",") if o
+    "https://hris-4-iqxd.onrender.com",
 ]
 
 # =========================================================
