@@ -921,10 +921,8 @@ def employee_qr_submit(request):
     if not employee:
         return JsonResponse({"error": "Employee not found"}, status=404)
 
-    today = date.today()
-    now_dt = timezone.localtime()
-    now_time = now_dt.time()   # ✅ FIX
-
+    today = timezone.localdate()
+    now_dt = timezone.localtime()  # ✅ timezone-aware datetime
 
     attendance, created = AttendanceRecord.objects.get_or_create(
         employee=employee,
@@ -935,10 +933,10 @@ def employee_qr_submit(request):
     # TIME IN
     # =====================
     if attendance.time_in is None:
-        attendance.time_in = now_time
+        attendance.time_in = now_dt  # ✅ STORE DATETIME
         attendance.status = (
             AttendanceRecord.Status.LATE
-            if now_time > time(8, 15)
+            if now_dt.time() > time(8, 15)
             else AttendanceRecord.Status.PRESENT
         )
         attendance.save()
@@ -950,26 +948,18 @@ def employee_qr_submit(request):
         })
 
     # =====================
-    # COOLDOWN CHECK (5 mins)
+    # TIME OUT (after 5 mins)
     # =====================
     if attendance.time_out is None:
-        in_dt = datetime.combine(today, attendance.time_in)
-        diff = now_dt - in_dt
+        diff = now_dt - attendance.time_in  # ✅ datetime - datetime
 
         if diff.total_seconds() < 300:
             return JsonResponse({
                 "error": "Please wait 5 minutes before checking out."
             }, status=400)
 
-        # =====================
-        # TIME OUT
-        # =====================
-        attendance.time_out = now_time
-
-        out_dt = datetime.combine(today, attendance.time_out)
-        delta = out_dt - in_dt
-
-        attendance.hours_worked = round(delta.total_seconds() / 3600, 2)
+        attendance.time_out = now_dt  # ✅ STORE DATETIME
+        attendance.hours_worked = round(diff.total_seconds() / 3600, 2)
         attendance.save()
 
         return JsonResponse({
