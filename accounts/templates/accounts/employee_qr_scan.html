@@ -74,7 +74,7 @@ function startScanner() {
 
 function onScanSuccess(decodedText) {
     html5QrCode.stop().then(() => {
-        fetch("{% url 'employee_qr_scan' %}", {
+        fetch("{% url 'employee_qr_submit' %}", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

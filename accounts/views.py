@@ -916,7 +916,7 @@ from datetime import date, time
 
 @require_POST
 @login_required(login_url="employeelogin")
-def employee_qr_scan(request):
+def employee_qr_submit(request):
     employee = _get_employee_from_user(request.user)
     if not employee:
         return JsonResponse({"error": "Employee not found"}, status=404)
@@ -924,6 +924,7 @@ def employee_qr_scan(request):
     today = date.today()
     now_dt = timezone.localtime()
     now_time = now_dt.time()   # ✅ FIX
+
 
     attendance, created = AttendanceRecord.objects.get_or_create(
         employee=employee,
@@ -934,7 +935,7 @@ def employee_qr_scan(request):
     # TIME IN
     # =====================
     if attendance.time_in is None:
-        attendance.time_in = now_time  # ✅ FIX
+        attendance.time_in = now_time
         attendance.status = (
             AttendanceRecord.Status.LATE
             if now_time > time(8, 15)
