@@ -1,6 +1,8 @@
+import re
 from decimal import Decimal
 import calendar
 from datetime import date, datetime, time
+from datetime import timedelta
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q, Avg
@@ -12,6 +14,8 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.urls import reverse
+from .models import SalaryGrade
+
 
 from .models import (
     Employee,
@@ -27,31 +31,6 @@ from .models import (
 # Fixed annual leave allocations for regular employees
 ANNUAL_VACATION_LEAVE_DAYS = 15
 ANNUAL_SICK_LEAVE_DAYS = 15
-
-SG_SALARY = {
-    27: Decimal("121264.00"),
-    25: Decimal("94968.00"),
-    24: Decimal("83457.00"),
-    22: Decimal("66438.00"),
-    21: Decimal("59511.00"),
-    20: Decimal("53532.00"),
-    19: Decimal("47932.00"),
-    18: Decimal("43608.00"),
-    15: Decimal("34177.00"),
-    14: Decimal("31470.00"),
-    13: Decimal("29258.00"),
-    11: Decimal("25520.00"),
-    10: Decimal("21748.00"),
-    9: Decimal("19724.00"),
-    8: Decimal("18231.00"),
-    7: Decimal("17094.00"),
-    6: Decimal("16113.00"),
-    5: Decimal("15186.00"),
-    4: Decimal("14308.00"),
-    3: Decimal("13478.00"),
-    2: Decimal("12686.00"),
-    1: Decimal("11952.00"),
-}
 
 
 def generate_next_emp_id():
@@ -162,7 +141,7 @@ def admindash(request):
         status=Message.Status.PENDING
     ).count()
 
-    today = localdate()  # PST if TIME_ZONE="Asia/Manila"
+    today = localdate()
     today_records = AttendanceRecord.objects.filter(date=today)
 
     present = today_records.filter(status=AttendanceRecord.Status.PRESENT).count()
@@ -178,6 +157,28 @@ def admindash(request):
     def pct(x):
         return int((x / total) * 100)
 
+    start_of_week = today - timedelta(days=today.weekday())
+    weekdays = [start_of_week + timedelta(days=i) for i in range(5)]
+
+    daily_averages = []
+    for day in weekdays:
+        avg = (
+            AttendanceRecord.objects.filter(
+                date=day,
+                hours_worked__isnull=False,
+            ).aggregate(avg=Avg("hours_worked"))["avg"]
+            or Decimal("0")
+        )
+        daily_averages.append(float(avg))
+
+    max_hours = max(daily_averages) or 1
+    x_positions = [5, 25, 45, 65, 85]
+    svg_points = []
+
+    for x, hours in zip(x_positions, daily_averages):
+        y = 45 - (hours / max_hours * 35)
+        svg_points.append(f"{x},{round(y, 2)}")
+
     context = {
         "employee_count": employee_count,
         "pending_messages_count": pending_messages_count,
@@ -192,7 +193,9 @@ def admindash(request):
         "absent_pct": pct(absent),
         "fieldwork_pct": pct(fieldwork),
         "health_pct": pct(health),
+        "chart_points": " ".join(svg_points),
     }
+
     return render(request, "accounts/admindash.html", context)
 
 
@@ -206,8 +209,11 @@ def adminemployee(request):
     edit_id = request.GET.get("edit")
     show_archived = request.GET.get("archived") == "1"
 
-    # Active vs Archived list
+    show_sg_editor = request.GET.get("edit_sg") == "1"
+    salary_grades = SalaryGrade.objects.all().order_by("grade")
+
     employees = Employee.objects.filter(is_archived=show_archived)
+    show_qr = request.GET.get("show_qr") == "1"
 
     if q:
         employees = employees.filter(
@@ -225,151 +231,59 @@ def adminemployee(request):
         employees = employees.filter(emp_status=status)
 
     show_form = request.GET.get("add") == "1" or bool(edit_id)
-    edit_employee = None
-    if edit_id:
-        edit_employee = get_object_or_404(Employee, pk=edit_id)
+    edit_employee = get_object_or_404(Employee, pk=edit_id) if edit_id else None
 
+    # ================= POST =================
     if request.method == "POST":
-        action = request.POST.get("action")
 
-        # Per-row reset password action (from table)
-        if action == "reset_password":
-            emp_id = request.POST.get("emp_id")
-            emp = get_object_or_404(Employee, pk=emp_id)
-            if emp.user:
-                emp.user.set_password(emp.emp_id)
-                emp.user.save()
-                messages.success(
-                    request,
-                    f"Password for {emp.emp_id} reset to default ({emp.emp_id}).",
-                )
-            else:
-                messages.error(
-                    request,
-                    "This employee does not have a linked user account.",
-                )
+        # ---- Salary Grade update ----
+        if request.POST.get("update_sg"):
+            for sg in salary_grades:
+                field = f"sg_{sg.grade}"
+                if field in request.POST:
+                    try:
+                        sg.monthly_salary = Decimal(request.POST[field])
+                        sg.save()
+                    except Exception:
+                        pass
+
+            messages.success(request, "Salary grades updated successfully.")
             return redirect("adminemployee")
 
+        # ---- Employee Add / Edit ----
         data = request.POST
         edit_emp_id = data.get("edit_emp_id")
 
-        # Read POSTed fields for validation
-        fname = (data.get("fname") or "").strip()
-        lname = (data.get("lname") or "").strip()
-        email = (data.get("email") or "").strip()
-        phone = (data.get("phone") or "").strip()
-        position = (data.get("position") or "").strip()
-        department = (data.get("department") or "").strip()
-        salary_grade = (data.get("salary_grade") or "").strip()
-        birthday = (data.get("birthday") or "").strip()
-        date_hired = (data.get("dateHired") or "").strip()
-        civil_status = (data.get("civil_status") or "").strip()
-        employment_status = (data.get("employment_status") or "").strip()
-        street = (data.get("street") or "").strip()
-        contact_name = (data.get("contactName") or "").strip()
-        barangay = (data.get("barangay") or "").strip()
-        relationship = (data.get("relationship") or "").strip()
-        municipality = (data.get("municipality") or "").strip()
-        contact_phone = (data.get("contactPhone") or "").strip()
-        province = (data.get("province") or "").strip()
-        zip_code = (data.get("zip") or "").strip()
-        jo_daily_rate_raw = (data.get("jo_daily_rate") or "").strip()
+        emp = (
+            get_object_or_404(Employee, pk=edit_emp_id)
+            if edit_emp_id
+            else Employee(emp_id=generate_next_emp_id())
+        )
 
-        # JO vs Regular validation rules
-        is_jo = employment_status == Employee.EmpStatus.JOB_ORDER
-        is_regular = employment_status == Employee.EmpStatus.REGULAR
+        emp.fname = data.get("fname", "").strip()
+        emp.lname = data.get("lname", "").strip()
+        emp.email = data.get("email", "").strip()
+        emp.phone = data.get("phone", "").strip()
+        emp.position = data.get("position", "").strip()
+        emp.dept = data.get("department", "").strip()
+        emp.salary_grade = data.get("salary_grade", "").strip()
+        emp.dob = data.get("birthday") or None
+        emp.date_hired = data.get("dateHired") or None
+        emp.civil_status = data.get("civil_status") or None
+        emp.emp_status = data.get("employment_status")
 
-        if is_jo:
-            # For JO, all fields required EXCEPT dept & position
-            required_fields = [
-                fname,
-                lname,
-                email,
-                employment_status,
-                birthday,
-                date_hired,
-                street,
-                contact_name,
-                barangay,
-                relationship,
-                municipality,
-                contact_phone,
-                province,
-                zip_code,
-                civil_status,
-                jo_daily_rate_raw,
-            ]
-        else:
-            # For Regular, dept, position, SG are also required
-            required_fields = [
-                fname,
-                lname,
-                email,
-                employment_status,
-                birthday,
-                date_hired,
-                street,
-                contact_name,
-                barangay,
-                relationship,
-                municipality,
-                contact_phone,
-                province,
-                zip_code,
-                civil_status,
-                department,
-                position,
-                salary_grade,
-            ]
+        emp.address = data.get("street", "")
+        emp.brgy = data.get("barangay", "")
+        emp.city = data.get("municipality", "")
+        emp.province = data.get("province", "")
+        emp.zipcode = data.get("zip", "")
+        emp.emc_name = data.get("contactName", "")
+        emp.emc_relation = data.get("relationship", "")
+        emp.emc_phone = data.get("contactPhone", "")
 
-        if any(not v for v in required_fields):
-            messages.error(
-                request,
-                "Please fill in all required fields. For Job Order employees, only "
-                "Department and Position may be left blank.",
-            )
-            # Redirect back to the correct form mode
-            if edit_emp_id:
-                url = reverse("adminemployee") + f"?edit={edit_emp_id}"
-            else:
-                url = reverse("adminemployee") + "?add=1"
-            return redirect(url)
-
-        # Fetch / create employee instance
-        if edit_emp_id:
-            emp = get_object_or_404(Employee, pk=edit_emp_id)
-        else:
-            emp_id = generate_next_emp_id()
-            emp = Employee(emp_id=emp_id)
-
-        # Assign values
-        emp.fname = fname
-        emp.lname = lname
-        emp.email = email
-        emp.phone = phone
-        emp.position = position if is_regular else ""
-        emp.dept = department if is_regular else ""
-        emp.salary_grade = salary_grade if is_regular else ""
-
-        emp.dob = birthday or None
-        emp.date_hired = date_hired or None
-        emp.civil_status = civil_status or None
-        emp.emp_status = employment_status
-
-        emp.address = street
-        emp.brgy = barangay
-        emp.city = municipality
-        emp.province = province
-        emp.zipcode = zip_code
-
-        emp.emc_name = contact_name
-        emp.emc_relation = relationship
-        emp.emc_phone = contact_phone
-
-        # JO daily rate handling
-        if is_jo:
+        if emp.emp_status == Employee.EmpStatus.JOB_ORDER:
             try:
-                emp.jo_daily_rate = Decimal(jo_daily_rate_raw)
+                emp.jo_daily_rate = Decimal(data.get("jo_daily_rate"))
             except Exception:
                 emp.jo_daily_rate = None
         else:
@@ -377,58 +291,45 @@ def adminemployee(request):
 
         emp.save()
 
-        # User account creation/update
-        if not edit_emp_id:
-            if not User.objects.filter(username=emp.emp_id).exists():
-                default_password = emp.emp_id
-                user = User.objects.create_user(
-                    username=emp.emp_id,
-                    password=default_password,
-                    first_name=emp.fname,
-                    last_name=emp.lname,
-                    email=emp.email,
-                )
-                emp.user = user
-                emp.save()
-        else:
-            if emp.user:
-                emp.user.first_name = emp.fname
-                emp.user.last_name = emp.lname
-                emp.user.email = emp.email
-                emp.user.save()
+        if not edit_emp_id and not User.objects.filter(username=emp.emp_id).exists():
+            user = User.objects.create_user(
+                username=emp.emp_id,
+                password=emp.emp_id,
+                first_name=emp.fname,
+                last_name=emp.lname,
+                email=emp.email,
+            )
+            emp.user = user
+            emp.save()
 
         return redirect("adminemployee")
 
-    # Attach today's attendance record (PST) to each employee
-    today = localdate()  # date in Asia/Manila
-    today_records = AttendanceRecord.objects.filter(date=today)
-    rec_map = {r.employee_id: r for r in today_records}
+    # ================= GET =================
+    today = localdate()
+    rec_map = {
+        r.employee_id: r
+        for r in AttendanceRecord.objects.filter(date=today)
+    }
 
     for e in employees:
         e.today_att = rec_map.get(e.emp_id)
-
-    # Filters for dropdowns use same scope (active or archives)
-    dept_choices = (
-        Employee.objects.filter(is_archived=show_archived)
-        .order_by()
-        .values_list("dept", flat=True)
-        .distinct()
-    )
-    status_choices = Employee.EmpStatus.choices
-    next_emp_id = generate_next_emp_id()
 
     context = {
         "employees": employees,
         "q": q,
         "dept": dept,
         "status": status,
-        "dept_choices": dept_choices,
-        "status_choices": status_choices,
+        "dept_choices": Employee.objects.values_list("dept", flat=True).distinct(),
+        "status_choices": Employee.EmpStatus.choices,
         "show_form": show_form,
         "edit_employee": edit_employee,
-        "next_emp_id": next_emp_id,
+        "next_emp_id": generate_next_emp_id(),
         "is_archives": show_archived,
+        "show_sg_editor": show_sg_editor,
+        "salary_grades": salary_grades,
+        "show_qr": show_qr,
     }
+
     return render(request, "accounts/adminemployee.html", context)
 
 
@@ -720,9 +621,21 @@ def payslip(request):
         return redirect("employeedash")
 
     today = localdate()
-    periods = get_half_month_periods(employee.date_hired or today, today)
-    if not periods:
-        periods = [get_current_period(today)]
+
+    hire_date = employee.date_hired or today
+
+    periods = get_half_month_periods(hire_date, today)
+
+    current_start, current_end = get_current_period(today)
+
+# Only add current period IF employee was already hired
+    if hire_date <= current_end:
+        current_period = (current_start, current_end)
+        if current_period not in periods:
+            periods.append(current_period)
+
+# Always keep periods ordered
+    periods.sort(key=lambda p: (p[0], p[1]))
 
     selected_value = request.GET.get("period")
     if selected_value:
@@ -738,8 +651,9 @@ def payslip(request):
     period_options = []
     selected_label = ""
     selected_period_value = f"{selected_start.isoformat()}_{selected_end.isoformat()}"
+
     for start, end in periods:
-        value = f"{start.isoformat()}_{end.isoformat()}"
+        value = f"{start}_{end}"
         label = f"{start.strftime('%b %d, %Y')} – {end.strftime('%b %d, %Y')}"
         period_options.append({"value": value, "label": label})
         if value == selected_period_value:
@@ -747,45 +661,62 @@ def payslip(request):
 
     is_job_order = employee.emp_status == Employee.EmpStatus.JOB_ORDER
 
+    # ================= JOB ORDER =================
     if is_job_order:
         daily_rate = employee.jo_daily_rate or Decimal("0")
-        work_statuses = [
-            AttendanceRecord.Status.PRESENT,
-            AttendanceRecord.Status.LATE,
-            AttendanceRecord.Status.FIELDWORK,
-            AttendanceRecord.Status.HEALTH,
-        ]
-        days_paid = (
-            AttendanceRecord.objects.filter(
-                employee=employee,
-                date__gte=selected_start,
-                date__lte=selected_end,
-                status__in=work_statuses,
-            )
-            .values("date")
-            .distinct()
-            .count()
-        )
-        basic_salary = daily_rate * Decimal(str(days_paid))
-        rata = Decimal("0")
-        gsis = Decimal("0")
-        philhealth = Decimal("0")
-        pagibig = Decimal("0")
-        gsis_loan = Decimal("0")
+
+        payable_days = AttendanceRecord.objects.filter(
+            employee=employee,
+            date__range=(selected_start, selected_end),
+            status__in=[
+                AttendanceRecord.Status.PRESENT,
+                AttendanceRecord.Status.LATE,
+                AttendanceRecord.Status.FIELDWORK,
+                AttendanceRecord.Status.HEALTH,
+            ],
+        ).values("date").distinct().count()
+
+        basic_salary = (daily_rate * Decimal(payable_days)).quantize(Decimal("0.01"))
+
+        rata = gsis = philhealth = pagibig = gsis_loan = Decimal("0")
+
+    # ================= REGULAR =================
     else:
-        sg_str = (employee.salary_grade or "").strip().replace("SG", "").replace("-", "")
-        try:
-            sg_num = int(sg_str)
-        except ValueError:
-            sg_num = None
-        monthly = SG_SALARY.get(sg_num, Decimal("0"))
-        basic_salary = monthly / Decimal("2") if monthly else Decimal("0")
+        # Extract SG number (SG-18 → 18)
+        match = re.search(r"\d+", employee.salary_grade or "")
+        sg_num = int(match.group()) if match else None
+
+        salary_obj = SalaryGrade.objects.filter(grade=sg_num).first()
+        monthly = salary_obj.monthly_salary if salary_obj else Decimal("0")
+
+        if monthly == 0:
+            messages.warning(
+                request,
+                f"Salary Grade SG-{sg_num} has no configured salary."
+            )
+
+        # Govt standard: 22 working days
+        daily_rate = monthly / Decimal("22")
+
+        payable_days = AttendanceRecord.objects.filter(
+            employee=employee,
+            date__range=(selected_start, selected_end),
+            status__in=[
+                AttendanceRecord.Status.PRESENT,
+                AttendanceRecord.Status.LATE,
+                AttendanceRecord.Status.FIELDWORK,
+                AttendanceRecord.Status.HEALTH,
+            ],
+        ).values("date").distinct().count()
+
+        basic_salary = (daily_rate * Decimal(payable_days)).quantize(Decimal("0.01"))
+
         rata = Decimal("2000.00")
         gsis = Decimal("1394.28")
         philhealth = Decimal("387.30")
         pagibig = Decimal("809.84")
         gsis_loan = Decimal("655.56")
-
+        
     total_earnings = basic_salary + rata
     total_deductions = gsis + philhealth + pagibig + gsis_loan
     net_pay = total_earnings - total_deductions
@@ -805,7 +736,9 @@ def payslip(request):
         "total_earnings": total_earnings,
         "total_deductions": total_deductions,
         "net_pay": net_pay,
+        "daily_rate": daily_rate,
     }
+
     return render(request, "accounts/payslip.html", context)
 
 
@@ -929,3 +862,136 @@ def employee_profile(request):
         "pwd_error": pwd_error,
     }
     return render(request, "accounts/employee_profile.html", context)
+
+@login_required
+@user_passes_test(_is_admin)
+def employee_list(request):
+    employees = Employee.objects.filter(is_archived=False).order_by("lname", "fname")
+
+    context = {
+        "employees": employees,
+    }
+    return render(request, "accounts/employeelist.html", context)
+
+import uuid
+import json
+from datetime import timedelta
+from django.utils.timezone import now
+from django.http import HttpResponseForbidden
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import render
+import qrcode
+import base64
+from io import BytesIO
+
+
+@user_passes_test(lambda u: u.is_staff)
+def admin_qr_attendance(request):
+    """
+    Generates a short-lived QR code for attendance.
+    Employee scanning will be handled separately.
+    """
+
+    # LGU Paombong coordinates (approximate)
+    #PAOMBONG_LAT = 14.8326
+    #PAOMBONG_LNG = 120.7892
+    #ALLOWED_RADIUS_METERS = 300
+
+    PAOMBONG_LAT = 14.841699
+    PAOMBONG_LNG = 120.786550
+    ALLOWED_RADIUS_METERS = 300
+
+    token = str(uuid.uuid4())
+    expires_at = now() + timedelta(minutes=5)
+
+    payload = {
+        "token": token,
+        "expires_at": expires_at.isoformat(),
+        "lat": PAOMBONG_LAT,
+        "lng": PAOMBONG_LNG,
+        "radius": ALLOWED_RADIUS_METERS,
+    }
+
+    qr_data = json.dumps(payload)
+
+    qr = qrcode.make(qr_data)
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    img_str = base64.b64encode(buffer.getvalue()).decode()
+
+    context = {
+        "qr_image": img_str,
+        "expires_at": expires_at,
+        "radius": ALLOWED_RADIUS_METERS,
+    }
+
+    return render(request, "accounts/admin_qr_attendance.html", context)
+
+
+import qrcode
+from io import BytesIO
+from django.http import HttpResponse
+from django.utils.timezone import localdate
+from django.contrib.admin.views.decorators import staff_member_required
+import json
+
+@login_required(login_url="employeelogin")
+def employee_qr_page(request):
+    return render(request, "employee_qr_scan.html")
+
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from django.utils import timezone
+from datetime import date, time
+
+@require_POST
+@login_required(login_url="employeelogin")
+def employee_qr_scan(request):
+    employee = _get_employee_from_user(request.user)
+    if not employee:
+        return JsonResponse({"error": "Employee not found"}, status=404)
+
+    today = date.today()
+    now = timezone.localtime()  # Asia/Manila safe
+
+    GRACE_LIMIT = time(8, 15)
+
+    attendance, created = AttendanceRecord.objects.get_or_create(
+        employee=employee,
+        date=today,
+    )
+
+    # ✅ TIME-IN
+    if attendance.time_in is None:
+        attendance.time_in = now
+
+        attendance.status = (
+            AttendanceRecord.Status.LATE
+            if now.time() > GRACE_LIMIT
+            else AttendanceRecord.Status.PRESENT
+        )
+
+        attendance.save()
+
+        return JsonResponse({
+            "success": True,
+            "action": "time_in",
+            "time": attendance.time_in.strftime("%H:%M"),
+        })
+
+    # ✅ TIME-OUT
+    if attendance.time_out is None:
+        attendance.time_out = now
+        delta = attendance.time_out - attendance.time_in
+        attendance.hours_worked = round(delta.total_seconds() / 3600, 2)
+        attendance.save()
+
+        return JsonResponse({
+            "success": True,
+            "action": "time_out",
+            "time": attendance.time_out.strftime("%H:%M"),
+        })
+
+    return JsonResponse({
+        "error": "Attendance already completed"
+    }, status=400)

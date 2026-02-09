@@ -514,7 +514,7 @@
       <!-- No. of Employees (clickable) -->
       <section
         class="card card-metric clickable-card"
-        onclick="window.location.href='{% url 'adminemployee'%}'"
+        onclick="window.location.href='{% url 'employee_list' %}'"
       >
         <h2>No. of Employees</h2>
         <div class="metric-icon">👥</div>
@@ -522,17 +522,6 @@
       </section>
 
       <!-- Messages (clickable) -->
-      <section
-        class="card card-messages clickable-card"
-        onclick="window.location.href='{% url 'message'%}'"
-      >
-        <h2>Messages</h2>
-        <div class="msg-body">
-          <div class="msg-icon">📧</div>
-          <div class="msg-count">{{ pending_messages_count }}</div>
-        </div>
-      </section>
-
       <!-- Attendance (maximized) -->
       <section class="card card-attendance">
         <h2>ATTENDANCE (Today)</h2>
@@ -599,7 +588,7 @@
                 fill="none"
                 stroke="#fe0000ff"
                 stroke-width="1.4"
-                points="5,10 25,18 45,12 65,13 85,20"
+                points="{{ chart_points }}"
               />
             </svg>
             <div class="chart-xlabels">

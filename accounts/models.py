@@ -283,6 +283,17 @@ class WeeklyActivity(models.Model):
         db_table = "weekly_activity"
         ordering = ["id"]
 
+class SalaryGrade(models.Model):
+    grade = models.PositiveIntegerField(unique=True)
+    monthly_salary = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        db_table = "salary_grade"
+        ordering = ["grade"]
+
+    def __str__(self):
+        return f"SG-{self.grade}"
+
 
 @receiver(post_save, sender=AttendanceRecord)
 def adjust_sick_leave_for_late_and_absent(sender, instance, created, **kwargs):
@@ -310,3 +321,5 @@ def adjust_sick_leave_for_late_and_absent(sender, instance, created, **kwargs):
 
     employee.sick_leave_balance = new_balance
     employee.save()
+
+    

@@ -1,0 +1,203 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LGU Paombong – Employees Overview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg-page: #f5f5fa;
+      --card-bg: #ffffff;
+      --card-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+      --border-light: #e1e1e8;
+      --blue-main: #003b8e;
+      --text-main: #222222;
+      --text-muted: #666666;
+      --salmon: #f39ca0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 12px 40px 6px;
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+    }
+
+    .logo-text-main {
+      font-size: 30px;
+    }
+
+    .logo-text-sub {
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border-light);
+      margin: 0 40px 20px;
+    }
+
+    main {
+      padding: 0 40px 40px;
+      flex: 1;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .back-btn {
+      background: var(--salmon);
+      color: #ffffff;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      box-shadow: var(--card-shadow);
+      border-radius: 4px;
+      padding: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border-light);
+      text-align: left;
+    }
+
+    th {
+      background: #f0f1f6;
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background: #f9f9fc;
+    }
+
+    .muted {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      table {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <img src="{% static 'accounts/images/paombongLogo.jpg' %}" class="logo-img" />
+      <div>
+        <div class="logo-text-main">LGU Paombong</div>
+        <div class="logo-text-sub">Human Resource Information System</div>
+      </div>
+    </div>
+  </header>
+
+  <hr />
+
+  <main>
+    <div class="page-header">
+      <div class="page-title">Employees Overview</div>
+      <button class="back-btn" onclick="window.location.href='{% url 'admindash' %}'">
+        ← Back to Dashboard
+      </button>
+    </div>
+
+    <section class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Employee ID</th>
+            <th>Full Name</th>
+            <th>Department</th>
+            <th>Position</th>
+            <th>Status</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Date Hired</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for emp in employees %}
+          <tr>
+            <td>{{ emp.emp_id }}</td>
+            <td>{{ emp.full_name }}</td>
+            <td>{{ emp.dept|default:"—" }}</td>
+            <td>{{ emp.position|default:"—" }}</td>
+            <td>{{ emp.emp_status }}</td>
+            <td>{{ emp.email }}</td>
+            <td>{{ emp.phone|default:"—" }}</td>
+            <td class="muted">
+              {% if emp.date_hired %}
+                {{ emp.date_hired }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="muted">No employees found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+</body>
+</html>

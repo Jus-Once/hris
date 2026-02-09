@@ -146,17 +146,27 @@
 
     .layout {
       display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
+      grid-template-columns: 260px 1fr;
       gap: 22px;
+      align-items: start; /* ⬅ prevents vertical stretching */
     }
 
-    /* SIDEBAR */
+   .sidebar {
+      width: 260px;
+      min-width: 260px;
+      max-width: 260px;
 
-    .sidebar {
-      background: var(--card-bg);
-      border-radius: var(--radius-card);
-      box-shadow: var(--card-shadow);
+      height: 300px;
+      min-height: 300px;
+      max-height: 300px;
+
+      overflow: hidden; /* ⬅ important */
+
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
       padding: 24px 18px;
+
       display: flex;
       flex-direction: column;
       gap: 22px;
@@ -399,7 +409,6 @@
           {{ request.user.get_full_name|default:request.user.username }}!
         {% endif %}
       </span>
-      <div class="notif-icon">🔔</div>
       <div class="user-circle">👤</div>
       <button class="logout-btn" onclick="window.location.href='{% url 'employeelogin' %}'">
         Logout
@@ -422,20 +431,6 @@
           <span>Payslip/Taxes</span>
         </div>
 
-        <div class="side-item" onclick="window.location.href='{% url 'benefits' %}'">
-          <div class="side-item-icon">💼</div>
-          <span>Benefits</span>
-        </div>
-
-        <div class="side-item" onclick="window.location.href='{% url 'performance' %}'">
-          <div class="side-item-icon">📊</div>
-          <span>Performance</span>
-        </div>
-
-        <div class="side-item" onclick="window.location.href='{% url 'announcements' %}'">
-          <div class="side-item-icon">📣</div>
-          <span>Announcement/News</span>
-        </div>
 
         <div class="side-item" onclick="window.location.href='{% url 'help' %}'">
           <div class="side-item-icon">🆘</div>
@@ -450,36 +445,6 @@
 
       <!-- MAIN GRID CARDS -->
       <section class="main-grid">
-        <!-- Quick Actions -->
-        <article class="card">
-          <h2 class="card-title">Quick Actions</h2>
-          <div class="actions-grid">
-            <button class="action-btn" onclick="window.location.href='{% url 'help' %}'">Request Leave</button>
-            <button class="action-btn" onclick="window.location.href='{% url 'payslip' %}'">View Payslip</button>
-            <button class="action-btn" onclick="window.location.href='{% url 'employee_profile' %}'">Update Profile</button>
-            <button class="action-btn" onclick="window.location.href='{% url 'help' %}'">Attendance Help</button>
-          </div>
-        </article>
-
-        <!-- Upcoming Events / Deadlines -->
-        <article class="card">
-          <h2 class="card-title">Upcoming Events/Deadlines</h2>
-          <ul class="card-list">
-            {% if pending_activities %}
-              {% for act in pending_activities %}
-                <li>
-                  {{ act.description }}
-                  {% if act.summary.week_end %}
-                    – due by {{ act.summary.week_end|date:"M d, Y" }}
-                  {% endif %}
-                </li>
-              {% endfor %}
-            {% else %}
-              <li>No upcoming tasks or deadlines for now.</li>
-            {% endif %}
-          </ul>
-        </article>
-
         <!-- Leave Overview -->
         <article class="card">
           <h2 class="card-title">Leave Overview</h2>
@@ -516,23 +481,34 @@
             </div>
           {% endif %}
         </article>
+        <!-- Attendance QR Scanner -->
+<article class="card" id="qrCard">
+  <h2 class="card-title">Attendance</h2>
 
-        <!-- Latest Announcements -->
-        <article class="card">
-          <h2 class="card-title">Latest Announcements</h2>
-          <ul class="card-list">
-            {% if announcements %}
-              {% for a in announcements %}
-                <li>
-                  {{ a.title }}
-                  {% if a.date %} – {{ a.date|date:"M d, Y" }}{% endif %}
-                </li>
-              {% endfor %}
-            {% else %}
-              <li>No announcements at the moment.</li>
-            {% endif %}
-          </ul>
-        </article>
+  <p style="margin-bottom:12px;">
+    Camera
+  </p>
+
+  <button
+    id="scanQrBtn"
+    style="
+      width:100%;
+      border-radius:999px;
+      padding:10px;
+      border:none;
+      background:#00c28a;
+      color:#fff;
+      font-size:14px;
+      cursor:pointer;
+    "
+  >
+    📷 Scan Attendance QR
+  </button>
+
+  <p id="qrStatus"
+     style="margin-top:10px;font-size:12px;color:#5d6470;">
+  </p>
+</article>
 
         <!-- Time Card -->
         <article class="card time-card">
@@ -598,5 +574,67 @@
       </div>
     </div>
   </footer>
+  <script>
+  const LGU_LAT = 14.841699;
+  const LGU_LNG = 120.786550;
+  const ALLOWED_RADIUS_METERS = 200;
+
+  //const LGU_LAT = 14.8346;
+  //const LGU_LNG = 120.7896;
+  //const ALLOWED_RADIUS_METERS = 200;
+
+  const scanBtn = document.getElementById("scanQrBtn");
+  const statusText = document.getElementById("qrStatus");
+
+  function getDistanceMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371000; // meters
+    const toRad = deg => deg * Math.PI / 180;
+
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) ** 2;
+
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  scanBtn.addEventListener("click", () => {
+    statusText.textContent = "Checking your location…";
+
+    if (!navigator.geolocation) {
+      statusText.textContent = "Geolocation is not supported by your browser.";
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const { latitude, longitude } = position.coords;
+        const distance = getDistanceMeters(
+          latitude,
+          longitude,
+          LGU_LAT,
+          LGU_LNG
+        );
+
+        if (distance <= ALLOWED_RADIUS_METERS) {
+          statusText.textContent = "Location verified. Opening QR scanner…";
+          window.location.href = "{% url 'employee_qr_scan' %}";
+        } else {
+          statusText.textContent =
+            "You must be within LGU Paombong premises to scan attendance.";
+        }
+      },
+      () => {
+        statusText.textContent =
+          "Location permission denied. Unable to verify attendance.";
+      }
+    );
+  });
+</script>
+
 </body>
 </html>

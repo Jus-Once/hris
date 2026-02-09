@@ -53,6 +53,9 @@
     .sidebar {
       background:#fff; border-radius:8px; box-shadow:0 10px 18px rgba(0,0,0,0.12);
       padding:24px 18px; display:flex; flex-direction:column; gap:22px;
+      height: 250px;
+      min-height: 250px;
+      max-height: 250px;
     }
     .side-item { display:flex; gap:16px; align-items:center; cursor:pointer; font-size:17px;}
     .side-item-icon { width:30px; height:30px; border-radius:6px; background:#f4f6fb; display:flex; align-items:center; justify-content:center;}
@@ -114,7 +117,6 @@
         {{ request.user.get_full_name|default:request.user.username }}!
       {% endif %}
     </span>
-    <div class="notif-icon">🔔</div>
     <div class="user-circle">👤</div>
     <button class="logout-btn" onclick="window.location.href='{% url 'employeelogin' %}'">
       Logout
@@ -131,15 +133,6 @@
       </div>
       <div class="side-item" onclick="window.location.href='{% url 'payslip' %}'">
         <div class="side-item-icon">🧾</div><span>Payslip/Taxes</span>
-      </div>
-      <div class="side-item" onclick="window.location.href='{% url 'benefits' %}'">
-        <div class="side-item-icon">💼</div><span>Benefits</span>
-      </div>
-      <div class="side-item" onclick="window.location.href='{% url 'performance' %}'">
-        <div class="side-item-icon">📊</div><span>Performance</span>
-      </div>
-      <div class="side-item" onclick="window.location.href='{% url 'announcements' %}'">
-        <div class="side-item-icon">📣</div><span>Announcement/News</span>
       </div>
       <div class="side-item" onclick="window.location.href='{% url 'help' %}'">
         <div class="side-item-icon">🆘</div><span>Help &amp; Support</span>

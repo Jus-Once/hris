@@ -195,15 +195,27 @@
 
     .layout {
       display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
+      grid-template-columns: 260px 1fr;
       gap: 22px;
+      align-items: start; /* ⬅ prevents vertical stretching */
     }
 
-    .sidebar {
-      background: var(--card-bg);
-      border-radius: var(--radius-card);
-      box-shadow: var(--card-shadow);
+   .sidebar {
+      width: 260px;
+      min-width: 260px;
+      max-width: 260px;
+
+      height: 300px;
+      min-height: 300px;
+      max-height: 300px;
+
+      overflow: hidden; /* ⬅ important */
+
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
       padding: 24px 18px;
+
       display: flex;
       flex-direction: column;
       gap: 22px;
@@ -453,7 +465,6 @@
           {{ request.user.get_full_name|default:request.user.username }}!
         {% endif %}
       </span>
-      <div class="notif-icon">🔔</div>
       <div class="user-circle" onclick="window.location.href='{% url 'employee_profile' %}'">
         👤
       </div>
@@ -474,21 +485,6 @@
         <div class="side-item active" onclick="window.location.href='{% url 'payslip' %}'">
           <div class="side-item-icon">🧾</div>
           <span>Payslip/Taxes</span>
-        </div>
-
-        <div class="side-item" onclick="window.location.href='{% url 'benefits' %}'">
-          <div class="side-item-icon">💼</div>
-          <span>Benefits</span>
-        </div>
-
-        <div class="side-item" onclick="window.location.href='{% url 'performance' %}'">
-          <div class="side-item-icon">📊</div>
-          <span>Performance</span>
-        </div>
-
-        <div class="side-item" onclick="window.location.href='{% url 'announcements' %}'">
-          <div class="side-item-icon">📣</div>
-          <span>Announcement/News</span>
         </div>
 
         <div class="side-item" onclick="window.location.href='{% url 'help' %}'">
@@ -525,90 +521,78 @@
 
           <div class="payslip-header">
             <div>
-              <span><span class="label">Employee Name:</span>
-                {{ employee.full_name }}
+              <span>
+              <span class="label">Employee Name:</span>
+                  {{ employee.full_name }}
               </span>
-              <span><span class="label">Employee ID:</span>
-                {{ employee.emp_id }}
+
+              <span>
+              <span class="label">Employee ID:</span>
+                  {{ employee.emp_id }}
               </span>
-              <span><span class="label">Department:</span>
-                {{ employee.dept }}
+
+              <span>
+              <span class="label">Department:</span>
+                  {{ employee.dept }}
               </span>
-            </div>
-            <div>
-              <span><span class="label">Pay Period:</span>
-                {{ selected_period_label }}
+
+              <span>
+              <span class="label">Salary Grade:</span>
+                  {{ employee.salary_grade }}
               </span>
-            </div>
           </div>
 
-          <table class="payslip-table">
+        <div>
+        <span>
+        <span class="label">Pay Period:</span>
+           {{ selected_period_label }}
+        </span>
+
+        <span>
+        <span class="label">Daily Rate:</span>
+            ₱{{ daily_rate|floatformat:2 }}
+        </span>
+
+        <span>
+        <span class="label">Days Paid:</span>
+            {{ payable_days }} day(s)
+        </span>
+          </div>
+      </div>
+
+      <table class="payslip-table">
             <thead>
-              <tr>
+             <tr>
                 <th>Earnings</th>
                 <th class="align-right">Amount (₱)</th>
-                <th>Deductions</th>
-                <th class="align-right">Amount (₱)</th>
-              </tr>
+            </tr>
             </thead>
             <tbody>
-              <!-- Basic Salary & GSIS -->
+
               <tr>
                 <td>Basic Salary</td>
-                <td class="align-right">{{ basic_salary|floatformat:2 }}</td>
-                <td>GSIS</td>
                 <td class="align-right">
-                  {% if is_job_order %}0.00{% else %}{{ gsis|floatformat:2 }}{% endif %}
+                    {{ basic_salary|floatformat:2 }}
                 </td>
               </tr>
 
-              <!-- RATA & PhilHealth -->
-              <tr>
-                <td>RATA / Allowance</td>
-                <td class="align-right">
-                  {% if is_job_order %}0.00{% else %}{{ rata|floatformat:2 }}{% endif %}
-                </td>
-                <td>PhilHealth</td>
-                <td class="align-right">
-                  {% if is_job_order %}0.00{% else %}{{ philhealth|floatformat:2 }}{% endif %}
-                </td>
-              </tr>
+          <tr>
+              <td>RATA</td>
+              <td class="align-right">
+                  {{ rata|floatformat:2 }}
+              </td>
+          </tr>
 
-              <!-- Pag-IBIG -->
-              <tr>
-                <td></td>
-                <td></td>
-                <td>Pag-IBIG</td>
-                <td class="align-right">
-                  {% if is_job_order %}0.00{% else %}{{ pagibig|floatformat:2 }}{% endif %}
-                </td>
-              </tr>
+          <tr class="totals-row">
+            <td>Total Earnings</td>
+            <td class="align-right">
+               {{ total_earnings|floatformat:2 }}
+            </td>
+          </tr>
 
-              <!-- GSIS Loan -->
-              <tr>
-                <td></td>
-                <td></td>
-                <td>GSIS Loan</td>
-                <td class="align-right">
-                  {% if is_job_order %}0.00{% else %}{{ gsis_loan|floatformat:2 }}{% endif %}
-                </td>
-              </tr>
+        </tbody>
+    </table>
 
-              <!-- Totals -->
-              <tr class="totals-row">
-                <td>Total Earnings</td>
-                <td class="align-right">{{ total_earnings|floatformat:2 }}</td>
-                <td>Total Deductions</td>
-                <td class="align-right">{{ total_deductions|floatformat:2 }}</td>
-              </tr>
-              <tr class="totals-row">
-                <td>Net Pay</td>
-                <td class="align-right">{{ net_pay|floatformat:2 }}</td>
-                <td></td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
 
         </article>
       </section>

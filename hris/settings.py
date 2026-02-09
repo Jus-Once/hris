@@ -1,5 +1,3 @@
-
-
 """
 Django settings for hris project.
 
@@ -10,14 +8,12 @@ from pathlib import Path
 import os
 import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent  # fixed: _file_ (not file)
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # =========================================================
 # CORE SECURITY / ENV SETTINGS
 # =========================================================
 
-# In production, set this via environment variable
 SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY",
     "django-insecure-9t7b+=_+$xd+=e&0gft+9grb_u0#kxn@91@9fpzno2ghbu28%4",
@@ -25,8 +21,12 @@ SECRET_KEY = os.getenv(
 
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS_ENV = os.getenv("DJANGO_ALLOWED_HOSTS", "hris-4-iqxd.onrender.com", )
-ALLOWED_HOSTS = [h for h in ALLOWED_HOSTS_ENV.split(",") if h]
+# ✅ FIXED: allow local + render
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "hris-4-iqxd.onrender.com",
+]
 
 CSRF_TRUSTED_ORIGINS_ENV = os.getenv("CSRF_TRUSTED_ORIGINS", "")
 CSRF_TRUSTED_ORIGINS = [
@@ -49,7 +49,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    # Whitenoise for serving static files in production
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -83,16 +82,24 @@ ASGI_APPLICATION = "hris.asgi.application"
 # DATABASE
 # =========================================================
 
-# Production: set DATABASE_URL in env (e.g. postgres://user:pass@host:5432/dbname)
-# If DATABASE_URL is not set, it will fall back to your local PostgreSQL settings.
-DATABASES = {
-    "default": dj_database_url.config(
-        default="postgres://postgres:112202@localhost:5432/HRIS",
-        conn_max_age=600,
-    )
-}
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-DATABASES ["default"] = dj_database_url.parse("postgresql://hris_db_g5l9_user:dlNQjKDelZHUyVAzFoUT19RP5DdLNZzn@dpg-d4c0frk9c44c738fdkfg-a.singapore-postgres.render.com/hris_db_g5l9")
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        )
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
 # =========================================================
 # PASSWORD VALIDATION
 # =========================================================
@@ -117,27 +124,22 @@ AUTH_PASSWORD_VALIDATORS = [
 # =========================================================
 
 LANGUAGE_CODE = "en-us"
-
-TIME_ZONE = "Asia/Manila"  # you can switch to "Asia/Manila" if you want
+TIME_ZONE = "Asia/Manila"
 
 USE_I18N = True
-
 USE_TZ = True
 
 # =========================================================
 # STATIC & MEDIA FILES
 # =========================================================
 
-# URL prefix for static files
 STATIC_URL = "/static/"
-
-# Folder where collectstatic will put all static files
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Whitenoise static file storage (for efficient serving in production)
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATICFILES_STORAGE = (
+    "whitenoise.storage.CompressedManifestStaticFilesStorage"
+)
 
-# Media (if you ever start using file uploads)
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
