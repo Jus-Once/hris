@@ -923,6 +923,7 @@ def employee_qr_scan(request):
 
     today = date.today()
     now_dt = timezone.localtime()
+    now_time = now_dt.time()   # ✅ FIX
 
     attendance, created = AttendanceRecord.objects.get_or_create(
         employee=employee,
@@ -933,10 +934,10 @@ def employee_qr_scan(request):
     # TIME IN
     # =====================
     if attendance.time_in is None:
-        attendance.time_in = now_dt
+        attendance.time_in = now_time  # ✅ FIX
         attendance.status = (
             AttendanceRecord.Status.LATE
-            if now_dt.time() > time(8, 15)
+            if now_time > time(8, 15)
             else AttendanceRecord.Status.PRESENT
         )
         attendance.save()
@@ -951,8 +952,10 @@ def employee_qr_scan(request):
     # COOLDOWN CHECK (5 mins)
     # =====================
     if attendance.time_out is None:
-        diff = now_dt - attendance.time_in
-        if diff.total_seconds() < 300:  # 5 minutes
+        in_dt = datetime.combine(today, attendance.time_in)
+        diff = now_dt - in_dt
+
+        if diff.total_seconds() < 300:
             return JsonResponse({
                 "error": "Please wait 5 minutes before checking out."
             }, status=400)
@@ -960,8 +963,8 @@ def employee_qr_scan(request):
         # =====================
         # TIME OUT
         # =====================
-        attendance.time_out = now_dt
-        delta = attendance.time_out - attendance.time_in
+        attendance.time_out = now_time  # ✅ FIX
+        delta = now_dt - in_dt
         attendance.hours_worked = round(delta.total_seconds() / 3600, 2)
         attendance.save()
 
@@ -971,9 +974,6 @@ def employee_qr_scan(request):
             "message": "Time-out recorded",
         })
 
-    # =====================
-    # ALREADY COMPLETED
-    # =====================
     return JsonResponse({
         "error": "Attendance already completed for today."
     }, status=400)
