@@ -964,8 +964,11 @@ def employee_qr_submit(request):
         # =====================
         # TIME OUT
         # =====================
-        attendance.time_out = now_time  # ✅ FIX
-        delta = now_dt - in_dt
+        attendance.time_out = now_time
+
+        out_dt = datetime.combine(today, attendance.time_out)
+        delta = out_dt - in_dt
+
         attendance.hours_worked = round(delta.total_seconds() / 3600, 2)
         attendance.save()
 
