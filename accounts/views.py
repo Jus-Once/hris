@@ -922,36 +922,45 @@ def employee_qr_scan(request):
         return JsonResponse({"error": "Employee not found"}, status=404)
 
     today = date.today()
-    now = timezone.localtime()  # Asia/Manila safe
-
-    GRACE_LIMIT = time(8, 15)
+    now_dt = timezone.localtime()
 
     attendance, created = AttendanceRecord.objects.get_or_create(
         employee=employee,
         date=today,
     )
 
-    # ✅ TIME-IN
+    # =====================
+    # TIME IN
+    # =====================
     if attendance.time_in is None:
-        attendance.time_in = now
-
+        attendance.time_in = now_dt
         attendance.status = (
             AttendanceRecord.Status.LATE
-            if now.time() > GRACE_LIMIT
+            if now_dt.time() > time(8, 15)
             else AttendanceRecord.Status.PRESENT
         )
-
         attendance.save()
 
         return JsonResponse({
             "success": True,
             "action": "time_in",
-            "time": attendance.time_in.strftime("%H:%M"),
+            "message": "Time-in recorded",
         })
 
-    # ✅ TIME-OUT
+    # =====================
+    # COOLDOWN CHECK (5 mins)
+    # =====================
     if attendance.time_out is None:
-        attendance.time_out = now
+        diff = now_dt - attendance.time_in
+        if diff.total_seconds() < 300:  # 5 minutes
+            return JsonResponse({
+                "error": "Please wait 5 minutes before checking out."
+            }, status=400)
+
+        # =====================
+        # TIME OUT
+        # =====================
+        attendance.time_out = now_dt
         delta = attendance.time_out - attendance.time_in
         attendance.hours_worked = round(delta.total_seconds() / 3600, 2)
         attendance.save()
@@ -959,10 +968,12 @@ def employee_qr_scan(request):
         return JsonResponse({
             "success": True,
             "action": "time_out",
-            "time": attendance.time_out.strftime("%H:%M"),
+            "message": "Time-out recorded",
         })
 
+    # =====================
+    # ALREADY COMPLETED
+    # =====================
     return JsonResponse({
-        "error": "Attendance already completed"
+        "error": "Attendance already completed for today."
     }, status=400)
-
