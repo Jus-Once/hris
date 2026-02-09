@@ -15,6 +15,12 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.urls import reverse
 from .models import SalaryGrade
+import uuid
+import json
+import base64
+import qrcode
+from io import BytesIO
+from django.utils.timezone import now
 
 
 from .models import (
@@ -215,6 +221,27 @@ def adminemployee(request):
     employees = Employee.objects.filter(is_archived=show_archived)
     show_qr = request.GET.get("show_qr") == "1"
 
+    qr_image = None
+
+    if show_qr:
+        PAOMBONG_LAT = 14.841699
+        PAOMBONG_LNG = 120.786550
+        ALLOWED_RADIUS_METERS = 300
+
+        payload = {
+            "token": str(uuid.uuid4()),
+            "expires_at": (now() + timedelta(minutes=5)).isoformat(),
+            "lat": PAOMBONG_LAT,
+            "lng": PAOMBONG_LNG,
+            "radius": ALLOWED_RADIUS_METERS,
+        }
+
+        qr = qrcode.make(json.dumps(payload))
+        buffer = BytesIO()
+        qr.save(buffer, format="PNG")
+        qr_image = base64.b64encode(buffer.getvalue()).decode()
+
+
     if q:
         employees = employees.filter(
             Q(emp_id__icontains=q)
@@ -327,8 +354,12 @@ def adminemployee(request):
         "is_archives": show_archived,
         "show_sg_editor": show_sg_editor,
         "salary_grades": salary_grades,
+
+        # ✅ QR
         "show_qr": show_qr,
+        "qr_image": qr_image,
     }
+
 
     return render(request, "accounts/adminemployee.html", context)
 
@@ -873,67 +904,6 @@ def employee_list(request):
     }
     return render(request, "accounts/employeelist.html", context)
 
-import uuid
-import json
-from datetime import timedelta
-from django.utils.timezone import now
-from django.http import HttpResponseForbidden
-from django.contrib.auth.decorators import user_passes_test
-from django.shortcuts import render
-import qrcode
-import base64
-from io import BytesIO
-
-
-@user_passes_test(lambda u: u.is_staff)
-def admin_qr_attendance(request):
-    """
-    Generates a short-lived QR code for attendance.
-    Employee scanning will be handled separately.
-    """
-
-    # LGU Paombong coordinates (approximate)
-    #PAOMBONG_LAT = 14.8326
-    #PAOMBONG_LNG = 120.7892
-    #ALLOWED_RADIUS_METERS = 300
-
-    PAOMBONG_LAT = 14.841699
-    PAOMBONG_LNG = 120.786550
-    ALLOWED_RADIUS_METERS = 300
-
-    token = str(uuid.uuid4())
-    expires_at = now() + timedelta(minutes=5)
-
-    payload = {
-        "token": token,
-        "expires_at": expires_at.isoformat(),
-        "lat": PAOMBONG_LAT,
-        "lng": PAOMBONG_LNG,
-        "radius": ALLOWED_RADIUS_METERS,
-    }
-
-    qr_data = json.dumps(payload)
-
-    qr = qrcode.make(qr_data)
-    buffer = BytesIO()
-    qr.save(buffer, format="PNG")
-    img_str = base64.b64encode(buffer.getvalue()).decode()
-
-    context = {
-        "qr_image": img_str,
-        "expires_at": expires_at,
-        "radius": ALLOWED_RADIUS_METERS,
-    }
-
-    return render(request, "accounts/admin_qr_attendance.html", context)
-
-
-import qrcode
-from io import BytesIO
-from django.http import HttpResponse
-from django.utils.timezone import localdate
-from django.contrib.admin.views.decorators import staff_member_required
-import json
 
 @login_required(login_url="employeelogin")
 def employee_qr_page(request):

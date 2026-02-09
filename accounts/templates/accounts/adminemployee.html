@@ -747,9 +747,12 @@
   </div>
 
   <div style="display:flex; gap:24px; align-items:center; flex-wrap:wrap;">
-    <img src="{% url 'admin_qr_attendance' %}"
-         alt="Attendance QR Code"
-         style="width:220px; height:220px; border:1px solid #ccc; padding:10px; background:#fff;">
+    <img
+      src="data:image/png;base64,{{ qr_image }}"
+      alt="Attendance QR Code"
+      style="width:220px; height:220px; border:1px solid #ccc; padding:10px; background:#fff;"
+    >
+
 
     <div style="font-size:15px; color:#555;">
         <p>

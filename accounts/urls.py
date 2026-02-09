@@ -5,7 +5,6 @@ urlpatterns = [
     path('', views.home, name='home'),
     path("employee/attendance/", views.employee_qr_page, name="employee_qr_page"),
     path("employee/attendance/scan/", views.employee_qr_scan, name="employee_qr_scan"),
-    path("attendance/qr/", views.admin_qr_attendance, name="admin_qr_attendance"),
     path('adminlogin', views.adminlogin, name='adminlogin'),
     path('adminlogout', views.adminlogout, name='adminlogout'),
     path('employeelogin', views.employeelogin, name='employeelogin'),
