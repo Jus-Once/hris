@@ -128,6 +128,7 @@ class AttendanceRecord(models.Model):
     time_in = models.DateTimeField(null=True, blank=True)
     time_out = models.DateTimeField(null=True, blank=True)
 
+
     status = models.CharField(
         max_length=20,
         choices=Status.choices,

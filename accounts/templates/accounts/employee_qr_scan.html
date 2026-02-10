@@ -61,19 +61,27 @@
         .find(row => row.startsWith('csrftoken='))
         ?.split('=')[1];
 
-    const html5QrCode = new Html5Qrcode("reader");
+    let html5QrCode = null;
 
 function startScanner() {
+  if (html5QrCode) {
+    html5QrCode.clear().catch(() => {});
+  }
+
+  html5QrCode = new Html5Qrcode("reader");
+
   html5QrCode.start(
     { facingMode: "environment" },
     { fps: 10, qrbox: 250 },
-    onScanSuccess,
-    () => {} // ignore scan errors
+    onScanSuccess
   );
 }
 
+
 function onScanSuccess(decodedText) {
     html5QrCode.stop().then(() => {
+        html5QrCode.clear();   // ✅ THIS IS THE FIX
+
         fetch("{% url 'employee_qr_submit' %}", {
             method: "POST",
             headers: {
@@ -82,21 +90,22 @@ function onScanSuccess(decodedText) {
             },
             body: JSON.stringify({ qr: decodedText })
         })
-            .then(res => res.json())
-            .then(data => {
-        if (data.success) {
-              alert(data.message); // 👈 THIS is what you were missing
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
 
-              setTimeout(() => {
-              window.location.href = "{% url 'employeedash' %}";
-          }, 800);
-          } else {
+                setTimeout(() => {
+                    window.location.href = "{% url 'employeedash' %}";
+                }, 800);
+            } else {
                 alert(data.error || "Attendance failed");
-                startScanner(); // restart scanner if failed
+                startScanner(); // restart camera if failed
             }
-          });
+        });
+    });
+}
 
-        }
 
 // 🔥 ALWAYS start camera on page load
 window.addEventListener("load", startScanner);

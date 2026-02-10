@@ -467,7 +467,11 @@ def employee_toggle_attendance(request, emp_id):
     elif record.time_out is None:
         record.time_out = now.time()
 
-        in_dt = datetime.combine(today, record.time_in)
+        in_dt = timezone.make_aware(
+                datetime.combine(today, attendance.time_in)
+        )
+        diff = now_dt - in_dt
+
         out_dt = datetime.combine(today, record.time_out)
         start_dt = datetime.combine(today, scheduled_start)
         end_dt = datetime.combine(today, scheduled_end)
@@ -921,10 +925,10 @@ def employee_qr_submit(request):
     if not employee:
         return JsonResponse({"error": "Employee not found"}, status=404)
 
-    today = timezone.localdate()
-    now_dt = timezone.localtime()  # ✅ timezone-aware datetime
+    now_dt = timezone.localtime()
+    today = now_dt.date()
 
-    attendance, created = AttendanceRecord.objects.get_or_create(
+    attendance, _ = AttendanceRecord.objects.get_or_create(
         employee=employee,
         date=today,
     )
@@ -933,7 +937,7 @@ def employee_qr_submit(request):
     # TIME IN
     # =====================
     if attendance.time_in is None:
-        attendance.time_in = now_dt  # ✅ STORE DATETIME
+        attendance.time_in = now_dt.time()
         attendance.status = (
             AttendanceRecord.Status.LATE
             if now_dt.time() > time(8, 15)
@@ -948,18 +952,24 @@ def employee_qr_submit(request):
         })
 
     # =====================
-    # TIME OUT (after 5 mins)
+    # TIME OUT (5-min cooldown)
     # =====================
     if attendance.time_out is None:
-        diff = now_dt - attendance.time_in  # ✅ datetime - datetime
+        in_dt = timezone.make_aware(
+            datetime.combine(today, attendance.time_in)
+        )
+
+        diff = now_dt - in_dt
 
         if diff.total_seconds() < 300:
             return JsonResponse({
                 "error": "Please wait 5 minutes before checking out."
             }, status=400)
 
-        attendance.time_out = now_dt  # ✅ STORE DATETIME
-        attendance.hours_worked = round(diff.total_seconds() / 3600, 2)
+        attendance.time_out = now_dt.time()
+        attendance.hours_worked = round(
+            diff.total_seconds() / 3600, 2
+        )
         attendance.save()
 
         return JsonResponse({
@@ -972,6 +982,7 @@ def employee_qr_submit(request):
         "error": "Attendance already completed for today."
     }, status=400)
 
+
 from django.utils.timezone import localtime
 from datetime import datetime, time
 
@@ -979,7 +990,7 @@ def auto_timeout_absentees():
     now = localtime()
     today = now.date()
 
-    if now.time() < time(17, 0):  # before 5PM → do nothing
+    if now.time() < time(17, 0):
         return
 
     records = AttendanceRecord.objects.filter(
@@ -989,7 +1000,17 @@ def auto_timeout_absentees():
     )
 
     for att in records:
-        att.time_out = datetime.combine(today, time(17, 0))
-        delta = att.time_out - att.time_in
-        att.hours_worked = round(delta.total_seconds() / 3600, 2)
+        in_dt = timezone.make_aware(
+            datetime.combine(today, att.time_in)
+        )
+        out_dt = timezone.make_aware(
+            datetime.combine(today, time(17, 0))
+        )
+
+        delta = out_dt - in_dt
+
+        att.time_out = time(17, 0)
+        att.hours_worked = round(
+            delta.total_seconds() / 3600, 2
+        )
         att.save()

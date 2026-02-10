@@ -595,36 +595,39 @@
   }
 
   scanBtn.addEventListener("click", () => {
-    statusText.textContent = "Checking your location…";
+  statusText.textContent = "Checking your location…";
 
-    if (!navigator.geolocation) {
-      statusText.textContent = "Geolocation is not supported by your browser.";
-      return;
-    }
+  if (!navigator.geolocation) {
+    // Still allow scan
+    window.location.href = "{% url 'employee_qr_page' %}";
+    return;
+  }
 
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        const { latitude, longitude } = position.coords;
-        const distance = getDistanceMeters(
-          latitude,
-          longitude,
-          LGU_LAT,
-          LGU_LNG
-        );
+  navigator.geolocation.getCurrentPosition(
+    position => {
+      const { latitude, longitude } = position.coords;
+      const distance = getDistanceMeters(
+        latitude,
+        longitude,
+        LGU_LAT,
+        LGU_LNG
+      );
 
-        if (distance <= ALLOWED_RADIUS_METERS) {
-          statusText.textContent = "Location verified. Opening QR scanner…";
-        } else {
-          statusText.textContent =
-            "You must be within LGU Paombong premises to scan attendance.";
-        }
-      },
-      () => {
-        statusText.textContent =
-          "Location permission denied. Unable to verify attendance.";
+      if (distance > ALLOWED_RADIUS_METERS) {
+        alert("Warning: You are outside LGU premises.");
+        // still allow scan (server will decide)
       }
-    );
-  });
+
+      // ✅ ALWAYS OPEN CAMERA
+      window.location.href = "{% url 'employee_qr_page' %}";
+    },
+    () => {
+      // ❗ geolocation failed — STILL OPEN CAMERA
+      window.location.href = "{% url 'employee_qr_page' %}";
+    }
+  );
+});
+
 </script>
 
 </body>
