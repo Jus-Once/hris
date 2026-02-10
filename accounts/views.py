@@ -583,6 +583,8 @@ def employeedash(request):
     if not employee:
         return redirect("employeelogin")
 
+    auto_timeout_absentees()
+
     # Latest announcements for the dashboard
     anns = Announcement.objects.filter(is_active=True)[:5]
 

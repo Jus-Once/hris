@@ -489,12 +489,30 @@
     Camera
   </p>
 
+  {% if today_attendance %}
+  {% if today_attendance.time_out %}
+    <p style="margin-top:8px;font-size:12px;color:#00a876;">
+      ✔ You have already timed out today.
+    </p>
+  {% elif today_attendance.time_in %}
+    <p style="margin-top:8px;font-size:12px;color:#5d6470;">
+      ⏳ You are currently timed in.
+    </p>
+  {% endif %}
+{% endif %}
+
+{% if today_attendance and today_attendance.time_out %}
+  <p style="font-size:13px;color:#00a876;">
+    ✅ Attendance completed for today
+  </p>
+{% else %}
   <button
     style="width:100%;border-radius:999px;padding:10px;border:none;
          background:#00c28a;color:#fff;font-size:14px;cursor:pointer;"
     onclick="window.location.href='{% url 'employee_qr_page' %}'">
     📷 Scan Attendance QR
   </button>
+{% endif %}
 
 
   <p id="qrStatus"
