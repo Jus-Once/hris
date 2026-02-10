@@ -934,11 +934,9 @@ def employee_qr_submit(request):
         date=today,
     )
 
-    # =====================
-    # TIME IN
-    # =====================
+    # ✅ TIME IN
     if attendance.time_in is None:
-        attendance.time_in = now_dt.time()
+        attendance.time_in = now_dt
         attendance.status = (
             AttendanceRecord.Status.LATE
             if now_dt.time() > time(8, 15)
@@ -952,22 +950,16 @@ def employee_qr_submit(request):
             "message": "Time-in recorded",
         })
 
-    # =====================
-    # TIME OUT (5-min cooldown)
-    # =====================
+    # ✅ TIME OUT (5-minute cooldown)
     if attendance.time_out is None:
-        in_dt = timezone.make_aware(
-            datetime.combine(today, attendance.time_in)
-        )
-
-        diff = now_dt - in_dt
+        diff = now_dt - attendance.time_in
 
         if diff.total_seconds() < 300:
             return JsonResponse({
                 "error": "Please wait 5 minutes before checking out."
             }, status=400)
 
-        attendance.time_out = now_dt.time()
+        attendance.time_out = now_dt
         attendance.hours_worked = round(
             diff.total_seconds() / 3600, 2
         )
@@ -982,7 +974,6 @@ def employee_qr_submit(request):
     return JsonResponse({
         "error": "Attendance already completed for today."
     }, status=400)
-
 
 from django.utils.timezone import localtime
 from datetime import datetime, time
