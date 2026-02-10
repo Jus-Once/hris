@@ -334,9 +334,10 @@ def adminemployee(request):
     # ================= GET =================
     today = localdate()
     rec_map = {
-        r.employee_id: r
-        for r in AttendanceRecord.objects.filter(date=today)
+    r.employee.emp_id: r
+    for r in AttendanceRecord.objects.filter(date=today)
     }
+
 
     for e in employees:
         e.today_att = rec_map.get(e.emp_id)
