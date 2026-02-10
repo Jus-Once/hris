@@ -513,11 +513,10 @@
               <span>
                 Time In:
                 {% if today_attendance and today_attendance.time_in %}
-                {{ today_attendance.time_in|time:"H:i" }}
+                  {{ today_attendance.time_in }}
                 {% else %}
-  -
+                  -
                 {% endif %}
-
               </span>
               <span>
                 Total Hours:
@@ -532,11 +531,10 @@
               <span>
                 Time Out:
                 {% if today_attendance and today_attendance.time_out %}
-                {{ today_attendance.time_out|time:"H:i" }}
+                  {{ today_attendance.time_out }}
                 {% else %}
-  -
+                  -
                 {% endif %}
-
               </span>
               <span>
                 Status:
