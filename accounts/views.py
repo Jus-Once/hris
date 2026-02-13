@@ -659,20 +659,15 @@ def payslip(request):
         return redirect("employeedash")
 
     today = localdate()
-
     hire_date = employee.date_hired or today
-
     periods = get_half_month_periods(hire_date, today)
-
     current_start, current_end = get_current_period(today)
 
-# Only add current period IF employee was already hired
     if hire_date <= current_end:
         current_period = (current_start, current_end)
         if current_period not in periods:
             periods.append(current_period)
 
-# Always keep periods ordered
     periods.sort(key=lambda p: (p[0], p[1]))
 
     selected_value = request.GET.get("period")
@@ -699,6 +694,12 @@ def payslip(request):
 
     is_job_order = employee.emp_status == Employee.EmpStatus.JOB_ORDER
 
+    # Default safe values
+    salary_grade_display = employee.salary_grade or "-"
+    daily_rate = Decimal("0.00")
+    payable_days = 0
+    rata = Decimal("0.00")
+
     # ================= JOB ORDER =================
     if is_job_order:
         daily_rate = employee.jo_daily_rate or Decimal("0")
@@ -716,11 +717,8 @@ def payslip(request):
 
         basic_salary = (daily_rate * Decimal(payable_days)).quantize(Decimal("0.01"))
 
-        rata = gsis = philhealth = pagibig = gsis_loan = Decimal("0")
-
     # ================= REGULAR =================
     else:
-        # Extract SG number (SG-18 → 18)
         match = re.search(r"\d+", employee.salary_grade or "")
         sg_num = int(match.group()) if match else None
 
@@ -733,10 +731,19 @@ def payslip(request):
                 f"Salary Grade SG-{sg_num} has no configured salary."
             )
 
-        # Govt standard: 22 working days
-        daily_rate = monthly / Decimal("22")
+        # Count weekdays only
+        total_weekdays = 0
+        current_day = selected_start
+        while current_day <= selected_end:
+            if current_day.weekday() < 5:
+                total_weekdays += 1
+            current_day += timedelta(days=1)
 
-        payable_days = AttendanceRecord.objects.filter(
+        total_weekdays = total_weekdays or 1
+
+        daily_rate = (monthly / Decimal(total_weekdays)).quantize(Decimal("0.01"))
+
+        attendance_days = AttendanceRecord.objects.filter(
             employee=employee,
             date__range=(selected_start, selected_end),
             status__in=[
@@ -745,36 +752,33 @@ def payslip(request):
                 AttendanceRecord.Status.FIELDWORK,
                 AttendanceRecord.Status.HEALTH,
             ],
-        ).values("date").distinct().count()
+        ).values_list("date", flat=True).distinct()
+
+        payable_days = sum(1 for d in attendance_days if d.weekday() < 5)
 
         basic_salary = (daily_rate * Decimal(payable_days)).quantize(Decimal("0.01"))
 
         rata = Decimal("2000.00")
-        gsis = Decimal("1394.28")
-        philhealth = Decimal("387.30")
-        pagibig = Decimal("809.84")
-        gsis_loan = Decimal("655.56")
-        
+
+    # ================= FINAL COMPUTATION =================
     total_earnings = basic_salary + rata
-    total_deductions = gsis + philhealth + pagibig + gsis_loan
-    net_pay = total_earnings - total_deductions
+    total_deductions = Decimal("0.00")
+    net_pay = total_earnings
 
     context = {
         "employee": employee,
+        "salary_grade": salary_grade_display,   # ✅ ADDED SAFELY
         "period_options": period_options,
         "selected_period_value": selected_period_value,
         "selected_period_label": selected_label,
         "is_job_order": is_job_order,
         "basic_salary": basic_salary,
         "rata": rata,
-        "gsis": gsis,
-        "philhealth": philhealth,
-        "pagibig": pagibig,
-        "gsis_loan": gsis_loan,
         "total_earnings": total_earnings,
         "total_deductions": total_deductions,
         "net_pay": net_pay,
         "daily_rate": daily_rate,
+        "payable_days": payable_days,
     }
 
     return render(request, "accounts/payslip.html", context)

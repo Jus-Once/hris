@@ -544,8 +544,8 @@
         <span>Time Tracking</span>
       </div>
       <div class="tab-link active" data-href="{% url 'message'%}">
-        <span class="icon">✉</span>
-        <span>Messages</span>
+        <span class="icon">❓</span>
+        <span>FAQs</span>
       </div>
     </div>
 
@@ -556,68 +556,13 @@
 
   <!-- MAIN CONTENT -->
   <main>
-    <h1 class="page-title">Employee Messages & FAQ</h1>
-
-    <div class="content-grid">
-      <!-- LEFT: EMPLOYEE MESSAGES -->
-      <section class="card">
-        <div class="card-inner">
-          <div class="card-header">
-            <span>Employee Messages</span>
-          </div>
-          <p class="section-caption">Direct messages and requests from employees</p>
-
-          {% for msg in messages %}
-            <div class="msg-item {% if msg.status == 'read' %}read{% endif %}">
-              <div class="msg-top">
-                <span class="msg-name">{{ msg.name }}</span>
-                <span class="msg-time">{{ msg.created_at|date:"h:i A" }}</span>
-              </div>
-              <div class="msg-type">{{ msg.message_type|default:"Message" }}</div>
-              <div class="msg-text">
-                {{ msg.text }}
-              </div>
-              <div class="msg-tags">
-                <span class="pill
-                  {% if msg.status == 'pending' %}pill-pending
-                  {% elif msg.status == 'responded' %}pill-responded
-                  {% else %}pill-read{% endif %}">
-                  {{ msg.get_status_display }}
-                </span>
-
-                <form method="post" action="{% url 'message_update_status' msg.pk %}">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="respond">
-                  <span class="pill pill-action">
-                    <button type="submit">
-                      {% if msg.status == 'pending' %}Mark Responded{% else %}Responded{% endif %}
-                    </button>
-                  </span>
-                </form>
-
-                <form method="post" action="{% url 'message_update_status' msg.pk %}">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="read">
-                  <span class="pill pill-action">
-                    <button type="submit">Mark as Read</button>
-                  </span>
-                </form>
-              </div>
-            </div>
-          {% empty %}
-            <p class="section-caption">No messages yet.</p>
-          {% endfor %}
-        </div>
-      </section>
-
+    <h1 class="page-title">Employee's FAQs</h1>
       <!-- RIGHT: FAQ + ANNOUNCEMENTS -->
       <section class="card">
         <div class="card-inner">
           <div class="right-header-row">
             <div class="right-title">Management Panel</div>
             <div class="subtabs">
-              <button class="subtab-btn active" id="tabFaq">FAQ</button>
-              <button class="subtab-btn" id="tabAnnouncements">Announcements</button>
             </div>
           </div>
 
@@ -665,55 +610,6 @@
               {% empty %}
                 <div class="faq-item">
                   <div class="faq-question">No FAQs yet.</div>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-
-          <!-- ANNOUNCEMENT VIEW -->
-          <div id="announceView" style="display:none;">
-            <p class="section-caption">
-              Create announcements that will appear on the employee dashboard.
-            </p>
-
-            <form method="post" action="{% url 'message' %}">
-              {% csrf_token %}
-              <input type="hidden" name="form_type" value="announcement">
-              <div class="form-grid">
-                <div class="field-group">
-                  <label class="field-label" for="annTitle">Title</label>
-                  <input id="annTitle" name="annTitle" class="field-input" placeholder="Announcement title" />
-                </div>
-                <div class="field-group">
-                  <label class="field-label" for="annDate">Date</label>
-                  <input id="annDate" name="annDate" type="date" class="field-input" />
-                </div>
-                <div class="field-group">
-                  <label class="field-label" for="annBody">Details</label>
-                  <textarea id="annBody" name="annBody" class="field-textarea" placeholder="Announcement details"></textarea>
-                </div>
-              </div>
-
-              <button class="btn-primary" type="submit">Post Announcement</button>
-            </form>
-
-            <div class="existing-title">Existing Announcements</div>
-            <div class="announce-list" id="announceList">
-              {% for ann in announcements %}
-                <div class="announce-item">
-                  <div class="announce-title-row">
-                    <span class="announce-title">{{ ann.title }}</span>
-                    <span class="announce-date">
-                      {% if ann.date %}{{ ann.date|date:"Y-m-d" }}{% endif %}
-                    </span>
-                  </div>
-                  <div class="announce-body">{{ ann.body }}</div>
-                </div>
-              {% empty %}
-                <div class="announce-item">
-                  <div class="announce-title-row">
-                    <span class="announce-title">No announcements yet.</span>
-                  </div>
                 </div>
               {% endfor %}
             </div>
