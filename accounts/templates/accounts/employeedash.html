@@ -591,8 +591,8 @@
     </div>
   </footer>
   <script>
-const LGU_LAT = 14.82974;
-const LGU_LNG = 120.8160632;
+const LGU_LAT = 14.829180;
+const LGU_LNG = 120.826253;
 const ALLOWED_RADIUS_METERS = 1000;
 
 const scanBtn = document.getElementById("scanQrBtn");
@@ -634,6 +634,9 @@ scanBtn.addEventListener("click", () => {
       );
 
     const gpsAccuracy = position.coords.accuracy || 0;
+    
+    console.log("Distance:", distance);
+    console.log("GPS Accuracy:", gpsAccuracy);
 
 // Allow extra room based on real GPS accuracy
     if (distance > (ALLOWED_RADIUS_METERS + gpsAccuracy)) {
