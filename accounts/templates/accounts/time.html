@@ -419,6 +419,64 @@
         grid-template-columns: 1fr;
       }
     }
+.print-date {
+  display: none;
+}
+@media print {
+
+  body {
+    margin: 0;
+  }
+
+  main {
+    padding: 0;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 400px;
+    height: 400px;
+    transform: translate(-50%, -50%);
+    background-image: url("{% static 'accounts/images/HRISLOGO.jpg' %}");
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.5;   /* ← subtle watermark */
+    z-index: 0;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-date,
+  .logs-wrapper,
+  .print-date *,
+  .logs-wrapper * {
+    visibility: visible;
+    position: relative;
+    z-index: 1;   /* keeps text above watermark */
+  }
+
+  .print-date {
+    display: block;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 25px;
+  }
+
+  .log-item {
+    border: 1px solid #000;
+    background: #fff;
+  }
+}
+
+
+
+
   </style>
 </head>
 <body>
@@ -443,10 +501,6 @@
   <!-- NAV TABS -->
   <div class="tab-bar">
     <div class="tabs-left">
-      <div class="tab-link" data-href="{% url 'admindash'%}">
-        <span class="icon">▦</span>
-        <span>Dashboard</span>
-      </div>
       <div class="tab-link" data-href="{% url 'adminemployee'%}">
         <span class="icon">👥</span>
         <span>Employees</span>
@@ -504,13 +558,36 @@
       <!-- Recent Time Logs -->
       <section class="card">
         <div class="card-inner">
-          <div class="card-header">
-            <span class="card-header-icon">🕒</span>
-            <span>Recent Time Logs</span>
-          </div>
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+  <div>
+    <span class="card-header-icon">🕒</span>
+    <span>Recent Time Logs</span>
+  </div>
+
+  <button onclick="printLogs()" 
+          style="padding:6px 14px; font-size:12px; border:1px solid #000; background:#000; color:#fff; cursor:pointer;">
+    🖨 Print
+  </button>
+</div>
+
           <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
-            Latest employee check-ins and check-outs
-          </p>
+  Latest employee check-ins and check-outs
+</p>
+
+<div class="print-date">
+  LGU Paombong – Attendance Report
+  {% if request.GET.date %}
+    <br>
+    Date: {{ request.GET.date }}
+  {% endif %}
+  {% if selected_department %}
+    <br>
+    Department: {{ selected_department }}
+  {% endif %}
+</div>
+
+
+
 
           <div class="logs-wrapper">
             {% for log in recent_logs %}
@@ -547,43 +624,58 @@
       </section>
     </div>
 
-    <!-- Time Tracking Details -->
-    <section class="card details-card">
-      <div class="card-inner">
-        <div class="card-header">
-          <span class="card-header-icon">📊</span>
-          <span>Time Tracking Details</span>
-        </div>
-        <div class="details-header-sub">
-          View and manage employee work hours
+ <!-- Time Tracking Details -->
+<section class="card details-card">
+  <div class="card-inner">
+    <div class="card-header">
+      <span class="card-header-icon">📊</span>
+      <span>Time Tracking Details</span>
+    </div>
+
+    <div class="details-header-sub">
+      View and manage employee work hours
+    </div>
+
+    <form method="get" action="{% url 'time' %}">
+      <div class="details-grid">
+
+        <div class="field-group">
+          <label class="field-label" for="dateRange">Date</label>
+          <input
+            id="dateRange"
+            type="date"
+            name="date"
+            class="field-input"
+            value="{{ request.GET.date }}"
+          />
         </div>
 
-        <div class="details-grid">
-          <div class="field-group">
-            <label class="field-label" for="dateRange">Date</label>
-            <input
-              id="dateRange"
-              type="date"
-              class="field-input"
-            />
-          </div>
+        <div class="field-group">
+          <label class="field-label" for="departmentSelect">Department</label>
+<select name="department" id="departmentSelect" class="field-select">
+  <option value="">All Departments</option>
+  {% for dept in departments %}
+    <option value="{{ dept }}"
+      {% if dept == selected_department %}selected{% endif %}>
+      {{ dept }}
+    </option>
+  {% endfor %}
+</select>
 
-          <div class="field-group">
-            <label class="field-label" for="employeeSelect">Employee</label>
-            <select id="employeeSelect" class="field-select">
-              <option>All Employees</option>
-              <!-- You can later render real employees here if you want -->
-            </select>
-          </div>
-
-          <div class="field-group">
-            <button class="btn-generate" id="generateBtn">
-              Generate report
-            </button>
-          </div>
         </div>
+
+        <div class="field-group">
+          <button type="submit" class="btn-generate">
+            Generate report
+          </button>
+        </div>
+
       </div>
-    </section>
+    </form>
+
+  </div>
+</section>
+
   </main>
 
   <!-- LOGOUT MODAL -->
@@ -626,14 +718,11 @@
       });
     });
 
-    // Demo "Generate report" toast
-    const generateBtn = document.getElementById("generateBtn");
-    const toast = document.getElementById("toast");
+    function printLogs() {
+    window.print();
+    }
 
-    generateBtn.addEventListener("click", () => {
-      toast.classList.add("show");
-      setTimeout(() => toast.classList.remove("show"), 2200);
-    });
+
   </script>
 </body>
 </html>

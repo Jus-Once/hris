@@ -108,7 +108,7 @@ def adminlogin(request):
         user = authenticate(request, username=username, password=password)
         if user is not None and user.is_staff:
             login(request, user)
-            return redirect("admindash")
+            return redirect("adminemployee")
         else:
             error = "Invalid credentials or you are not authorized as an admin."
             return render(request, "accounts/adminlogin.html", {"error": error})
@@ -507,25 +507,48 @@ def employee_toggle_attendance(request, emp_id):
 @user_passes_test(_is_admin)
 def time_tracking(request):
     today = localdate()
-    today_records = AttendanceRecord.objects.filter(date=today)
 
-    present = today_records.filter(status=AttendanceRecord.Status.PRESENT).count()
-    late = today_records.filter(status=AttendanceRecord.Status.LATE).count()
-    on_leave = today_records.filter(
-        status__in=[AttendanceRecord.Status.FIELDWORK, AttendanceRecord.Status.HEALTH]
+    selected_date = request.GET.get("date")
+    selected_department = request.GET.get("department")
+
+    records = AttendanceRecord.objects.select_related("employee")
+
+    # Filter by date
+    if selected_date:
+        records = records.filter(date=selected_date)
+    else:
+        records = records.filter(date=today)
+
+    # Filter by department (FIXED: dept instead of department)
+    if selected_department:
+        records = records.filter(employee__dept=selected_department)
+
+    present = records.filter(status=AttendanceRecord.Status.PRESENT).count()
+    late = records.filter(status=AttendanceRecord.Status.LATE).count()
+    on_leave = records.filter(
+        status__in=[
+            AttendanceRecord.Status.FIELDWORK,
+            AttendanceRecord.Status.HEALTH,
+        ]
     ).count()
 
-    avg_hours = today_records.aggregate(avg=Avg("hours_worked"))["avg"] or 0
+    avg_hours = records.aggregate(avg=Avg("hours_worked"))["avg"] or 0
 
-    recent_logs = AttendanceRecord.objects.select_related("employee")[:10]
+    # Get unique departments (FIXED: dept instead of department)
+    departments = Employee.objects.values_list(
+        "dept", flat=True
+    ).distinct()
 
     context = {
         "today_present": present,
         "today_on_leave": on_leave,
         "today_late": late,
         "today_avg_hours": round(float(avg_hours), 2) if avg_hours else 0,
-        "recent_logs": recent_logs,
+        "recent_logs": records,
+        "departments": departments,
+        "selected_department": selected_department,
     }
+
     return render(request, "accounts/time.html", context)
 
 
@@ -726,7 +749,7 @@ def payslip(request):
 
         basic_salary = (daily_rate * Decimal(payable_days)).quantize(Decimal("0.01"))
 
-    # ================= REGULAR =================
+        # ================= REGULAR =================
     else:
         match = re.search(r"\d+", employee.salary_grade or "")
         sg_num = int(match.group()) if match else None
@@ -740,18 +763,11 @@ def payslip(request):
                 f"Salary Grade SG-{sg_num} has no configured salary."
             )
 
-        # Count weekdays only
-        total_weekdays = 0
-        current_day = selected_start
-        while current_day <= selected_end:
-            if current_day.weekday() < 5:
-                total_weekdays += 1
-            current_day += timedelta(days=1)
+        # ✅ Government standard divisor
+        daily_rate = (monthly / Decimal("22")).quantize(Decimal("0.01"))
 
-        total_weekdays = total_weekdays or 1
 
-        daily_rate = (monthly / Decimal(total_weekdays)).quantize(Decimal("0.01"))
-
+        # Count payable attendance days (weekday only)
         attendance_days = AttendanceRecord.objects.filter(
             employee=employee,
             date__range=(selected_start, selected_end),
@@ -767,7 +783,7 @@ def payslip(request):
 
         basic_salary = (daily_rate * Decimal(payable_days)).quantize(Decimal("0.01"))
 
-        rata = Decimal("2000.00")
+        rata = Decimal("1000.00")
 
     # ================= FINAL COMPUTATION =================
     total_earnings = basic_salary + rata
@@ -776,7 +792,7 @@ def payslip(request):
 
     context = {
         "employee": employee,
-        "salary_grade": salary_grade_display,   # ✅ ADDED SAFELY
+        "salary_grade": salary_grade_display,
         "period_options": period_options,
         "selected_period_value": selected_period_value,
         "selected_period_label": selected_label,

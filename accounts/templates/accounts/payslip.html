@@ -419,27 +419,57 @@
       }
     }
 
-    /* Optional: basic print cleanup */
-    @media print {
-      .top-bar,
-      .sub-bar,
-      .sidebar,
-      footer,
-      .period-form,
-      .print-btn {
-        display: none !important;
-      }
-      body {
-        background: #ffffff;
-      }
-      main {
-        padding: 0;
-      }
-      .card {
-        box-shadow: none;
-        border-radius: 0;
-      }
-    }
+@media print {
+
+  /* Hide UI elements */
+  .top-bar,
+  .sub-bar,
+  .sidebar,
+  footer,
+  .period-form,
+  .print-btn {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff;
+    margin: 0;
+  }
+
+  main {
+    padding: 0;
+  }
+
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("{% static 'accounts/images/HRISLOGO.jpg' %}");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 300px;
+  opacity: 0.5;
+  z-index: 0;
+  pointer-events: none;
+}
+
+
+.card {
+  box-shadow: none;
+  border-radius: 0;
+  position: relative;
+}
+
+.payslip-wrapper {
+  min-height: 100vh;
+}
+
+
+
+
+}
+
   </style>
 </head>
 <body>
@@ -538,8 +568,12 @@
 
               <span>
               <span class="label">Salary Grade:</span>
-                  {{ employee.salary_grade }}
+              SG-{{ sg_number }}
+              {% if sg_monthly %}
+                  (₱{{ sg_monthly|floatformat:2 }} / month)
+              {% endif %}
               </span>
+
           </div>
 
         <div>
