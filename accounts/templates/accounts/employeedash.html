@@ -510,11 +510,12 @@
   </p>
 {% else %}
   <button
-    style="width:100%;border-radius:999px;padding:10px;border:none;
-         background:#00c28a;color:#fff;font-size:14px;cursor:pointer;"
-    onclick="window.location.href='{% url 'employee_qr_page' %}'">
-    📷 Scan Attendance QR
-  </button>
+  id="scanQrBtn"
+  style="width:100%;border-radius:999px;padding:10px;border:none;
+         background:#00c28a;color:#fff;font-size:14px;cursor:pointer;">
+  📷 Scan Attendance QR
+</button>
+
 {% endif %}
 
 
@@ -590,38 +591,34 @@
     </div>
   </footer>
   <script>
-  const LGU_LAT = 14.841699;
-  const LGU_LNG = 120.786550;
-  const ALLOWED_RADIUS_METERS = 200;
+  const LGU_LAT = 14.82974;
+const LGU_LNG = 120.8160632;
+const ALLOWED_RADIUS_METERS = 200;
 
-  //const LGU_LAT = 14.8346;
-  //const LGU_LNG = 120.7896;
-  //const ALLOWED_RADIUS_METERS = 200;
+const scanBtn = document.getElementById("scanQrBtn");
+const statusText = document.getElementById("qrStatus");
 
-  const scanBtn = document.getElementById("scanQrBtn");
-  const statusText = document.getElementById("qrStatus");
+function getDistanceMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const toRad = deg => deg * Math.PI / 180;
 
-  function getDistanceMeters(lat1, lon1, lat2, lon2) {
-    const R = 6371000; // meters
-    const toRad = deg => deg * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
 
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) *
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) ** 2;
 
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
-    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  }
-
-  scanBtn.addEventListener("click", () => {
+if (scanBtn) {
+scanBtn.addEventListener("click", () => {
   statusText.textContent = "Checking your location…";
 
   if (!navigator.geolocation) {
-    // Still allow scan
     window.location.href = "{% url 'employee_qr_page' %}";
     return;
   }
@@ -638,18 +635,22 @@
 
       if (distance > ALLOWED_RADIUS_METERS) {
         alert("Warning: You are outside LGU premises.");
-        // still allow scan (server will decide)
       }
 
-      // ✅ ALWAYS OPEN CAMERA
       window.location.href = "{% url 'employee_qr_page' %}";
     },
     () => {
-      // ❗ geolocation failed — STILL OPEN CAMERA
-      window.location.href = "{% url 'employee_qr_page' %}";
+      alert("Location access denied or unavailable.");
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
     }
   );
 });
+}
+
 
 </script>
 
