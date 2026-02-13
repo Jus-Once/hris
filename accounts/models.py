@@ -125,8 +125,8 @@ class AttendanceRecord(models.Model):
         related_name="attendance_records",
     )
     date = models.DateField()
-    time_in = models.DateTimeField(null=True, blank=True)
-    time_out = models.DateTimeField(null=True, blank=True)
+    time_in = models.TimeField(null=True, blank=True)
+    time_out = models.TimeField(null=True, blank=True)
 
 
     status = models.CharField(

@@ -930,6 +930,7 @@ def employee_qr_submit(request):
 
     now_dt = timezone.localtime()
     today = now_dt.date()
+    now_time = now_dt.time()
 
     attendance, _ = AttendanceRecord.objects.get_or_create(
         employee=employee,
@@ -938,10 +939,10 @@ def employee_qr_submit(request):
 
     # ✅ TIME IN
     if attendance.time_in is None:
-        attendance.time_in = now_dt
+        attendance.time_in = now_time   # 🔥 FIX HERE
         attendance.status = (
             AttendanceRecord.Status.LATE
-            if now_dt.time() > time(8, 15)
+            if now_time > time(8, 15)
             else AttendanceRecord.Status.PRESENT
         )
         attendance.save()
@@ -954,14 +955,17 @@ def employee_qr_submit(request):
 
     # ✅ TIME OUT (5-minute cooldown)
     if attendance.time_out is None:
-        diff = now_dt - attendance.time_in
+        from datetime import datetime
+
+        in_dt = datetime.combine(today, attendance.time_in)
+        diff = now_dt - timezone.make_aware(in_dt)
 
         if diff.total_seconds() < 300:
             return JsonResponse({
                 "error": "Please wait 5 minutes before checking out."
             }, status=400)
 
-        attendance.time_out = now_dt
+        attendance.time_out = now_time   # 🔥 FIX HERE
         attendance.hours_worked = round(
             diff.total_seconds() / 3600, 2
         )
@@ -994,9 +998,13 @@ def auto_timeout_absentees():
     )
 
     for att in records:
+        if not att.time_in:
+            continue
+
         in_dt = timezone.make_aware(
-            datetime.combine(today, att.time_in)
+        datetime.combine(today, att.time_in)
         )
+
         out_dt = timezone.make_aware(
             datetime.combine(today, time(17, 0))
         )

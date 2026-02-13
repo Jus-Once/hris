@@ -533,7 +533,7 @@
                 {% if today_attendance and today_attendance.time_in %}
                 {{ today_attendance.time_in|localtime|date:"h:i A" }}
                 {% else %}
-                      -
+                    -
                 {% endif %}
 
               </span>
@@ -542,7 +542,7 @@
                 {% if today_attendance and today_attendance.hours_worked %}
                   {{ today_attendance.hours_worked }}
                 {% else %}
-                  -
+                    -
                 {% endif %}
               </span>
             </div>
