@@ -531,7 +531,7 @@
               <span>
                 Time In:
                 {% if today_attendance and today_attendance.time_in %}
-                {{ today_attendance.time_in|localtime|date:"h:i A" }}
+                {{ today_attendance.time_in|time:"h:i A" }}
                 {% else %}
                     -
                 {% endif %}
@@ -550,7 +550,7 @@
               <span>
                 Time Out:
                 {% if today_attendance and today_attendance.time_out %}
-                {{ today_attendance.time_out|localtime|date:"h:i A" }}
+                {{ today_attendance.time_out|time:"h:i A" }}
                 {% else %}
                     -
                 {% endif %}
