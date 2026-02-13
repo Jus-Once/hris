@@ -226,7 +226,7 @@ def adminemployee(request):
     if show_qr:
         PAOMBONG_LAT = 14.82974
         PAOMBONG_LNG = 120.8160632
-        ALLOWED_RADIUS_METERS = 500
+        ALLOWED_RADIUS_METERS = 1000
 
         payload = {
             "token": str(uuid.uuid4()),

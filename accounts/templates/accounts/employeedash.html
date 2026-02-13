@@ -635,9 +635,6 @@ scanBtn.addEventListener("click", () => {
 
     const gpsAccuracy = position.coords.accuracy || 0;
 
-    console.log("Distance:", distance);
-    console.log("GPS Accuracy:", gpsAccuracy);
-
 // Allow extra room based on real GPS accuracy
     if (distance > (ALLOWED_RADIUS_METERS + gpsAccuracy)) {
       alert("You are outside LGU premises. Scanning is not allowed.");
