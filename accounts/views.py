@@ -218,6 +218,15 @@ def adminemployee(request):
     show_sg_editor = request.GET.get("edit_sg") == "1"
     salary_grades = SalaryGrade.objects.all().order_by("grade")
 
+    # AUTO-CREATE SG rows if none exist (production fix)
+    if not salary_grades.exists():
+        for i in range(1, 28):  # SG-1 to SG-33
+            SalaryGrade.objects.create(
+                grade=i,
+                monthly_salary=Decimal("0.00")
+        )
+    salary_grades = SalaryGrade.objects.all().order_by("grade")
+
     employees = Employee.objects.filter(is_archived=show_archived)
     show_qr = request.GET.get("show_qr") == "1"
 
