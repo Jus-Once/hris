@@ -224,9 +224,9 @@ def adminemployee(request):
     qr_image = None
 
     if show_qr:
-        PAOMBONG_LAT = 14.841699
-        PAOMBONG_LNG = 120.786550
-        ALLOWED_RADIUS_METERS = 300
+        PAOMBONG_LAT = 14.82974
+        PAOMBONG_LNG = 120.8160632
+        ALLOWED_RADIUS_METERS = 500
 
         payload = {
             "token": str(uuid.uuid4()),

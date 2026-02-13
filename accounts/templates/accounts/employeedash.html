@@ -591,9 +591,9 @@
     </div>
   </footer>
   <script>
-  const LGU_LAT = 14.82974;
+const LGU_LAT = 14.82974;
 const LGU_LNG = 120.8160632;
-const ALLOWED_RADIUS_METERS = 200;
+const ALLOWED_RADIUS_METERS = 500;
 
 const scanBtn = document.getElementById("scanQrBtn");
 const statusText = document.getElementById("qrStatus");
@@ -633,9 +633,16 @@ scanBtn.addEventListener("click", () => {
         LGU_LNG
       );
 
-      if (distance > ALLOWED_RADIUS_METERS) {
-        alert("Warning: You are outside LGU premises.");
-      }
+    const gpsAccuracy = position.coords.accuracy || 0;
+
+    console.log("Distance:", distance);
+    console.log("GPS Accuracy:", gpsAccuracy);
+
+// Allow extra room based on real GPS accuracy
+    if (distance > (ALLOWED_RADIUS_METERS + gpsAccuracy)) {
+      alert("You are outside LGU premises. Scanning is not allowed.");
+      return;
+    }
 
       window.location.href = "{% url 'employee_qr_page' %}";
     },
