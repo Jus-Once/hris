@@ -535,9 +535,14 @@ def time_tracking(request):
     avg_hours = records.aggregate(avg=Avg("hours_worked"))["avg"] or 0
 
     # Get unique departments (FIXED: dept instead of department)
-    departments = Employee.objects.values_list(
-        "dept", flat=True
-    ).distinct()
+    departments = (
+        Employee.objects
+        .exclude(dept__isnull=True)
+        .exclude(dept__exact="")
+        .values_list("dept", flat=True)
+        .distinct()
+        .order_by("dept")
+    )
 
     context = {
         "today_present": present,
@@ -793,6 +798,8 @@ def payslip(request):
     context = {
         "employee": employee,
         "salary_grade": salary_grade_display,
+        "sg_number": sg_num,
+        "sg_monthly": monthly,
         "period_options": period_options,
         "selected_period_value": selected_period_value,
         "selected_period_label": selected_label,
@@ -805,6 +812,7 @@ def payslip(request):
         "daily_rate": daily_rate,
         "payable_days": payable_days,
     }
+
 
     return render(request, "accounts/payslip.html", context)
 

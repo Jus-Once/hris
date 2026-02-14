@@ -568,7 +568,12 @@
 
               <span>
               <span class="label">Salary Grade:</span>
-              SG-{{ sg_number }}
+              {% if sg_number %}
+                SG-{{ sg_number }}
+              {% else %}
+                Not Assigned
+              {% endif %}
+
               {% if sg_monthly %}
                   (₱{{ sg_monthly|floatformat:2 }} / month)
               {% endif %}
