@@ -80,31 +80,73 @@ function startScanner() {
 
 function onScanSuccess(decodedText) {
     html5QrCode.stop().then(() => {
-        html5QrCode.clear();   // ✅ THIS IS THE FIX
+        html5QrCode.clear();
 
-        fetch("{% url 'employee_qr_submit' %}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrftoken
+        let qrData;
+
+        try {
+            qrData = JSON.parse(decodedText);
+        } catch (e) {
+            alert("Invalid QR format.");
+            startScanner();
+            return;
+        }
+
+        // ✅ GET HIGH ACCURACY GPS LOCATION
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+
+                // ⚠️ optional safety check
+                if (accuracy > 100) {
+                    alert("Weak GPS signal. Move to open area.");
+                    startScanner();
+                    return;
+                }
+
+                fetch("{% url 'employee_qr_submit' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken
+                    },
+                    body: JSON.stringify({
+                        token: qrData.token,
+                        lat: lat,
+                        lng: lng,
+                        accuracy: accuracy
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        setTimeout(() => {
+                            window.location.href = "{% url 'employeedash' %}";
+                        }, 800);
+                    } else {
+                        alert(data.error || "Attendance failed");
+                        startScanner();
+                    }
+                });
+
             },
-            body: JSON.stringify({ qr: decodedText })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-
-                setTimeout(() => {
-                    window.location.href = "{% url 'employeedash' %}";
-                }, 800);
-            } else {
-                alert(data.error || "Attendance failed");
-                startScanner(); // restart camera if failed
+            function(error) {
+                alert("Location permission required.");
+                startScanner();
+            },
+            {
+                enableHighAccuracy: true,   // ⭐ IMPORTANT
+                timeout: 10000,
+                maximumAge: 0
             }
-        });
+        );
     });
 }
+
 
 
 // 🔥 ALWAYS start camera on page load

@@ -233,23 +233,27 @@ def adminemployee(request):
     qr_image = None
 
     if show_qr:
-        PAOMBONG_LAT = 14.866707
-        PAOMBONG_LNG = 120.807094
-        ALLOWED_RADIUS_METERS = 1000
+        from django.utils import timezone
+        from .models import QRSession
+
+        # Deactivate old QR sessions
+        QRSession.objects.filter(is_active=True).update(is_active=False)
+
+        # Create new QR session
+        qr_session = QRSession.objects.create(
+            expires_at=timezone.now() + timedelta(minutes=5),
+            is_active=True,
+        )
 
         payload = {
-            "token": str(uuid.uuid4()),
-            "expires_at": (now() + timedelta(minutes=5)).isoformat(),
-            "lat": PAOMBONG_LAT,
-            "lng": PAOMBONG_LNG,
-            "radius": ALLOWED_RADIUS_METERS,
+            "token": str(qr_session.token),
         }
 
         qr = qrcode.make(json.dumps(payload))
+
         buffer = BytesIO()
         qr.save(buffer, format="PNG")
         qr_image = base64.b64encode(buffer.getvalue()).decode()
-
 
     if q:
         employees = employees.filter(
@@ -959,6 +963,8 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import date, time
+from .models import QRSession
+
 
 @require_POST
 @login_required(login_url="employeelogin")
@@ -967,6 +973,61 @@ def employee_qr_submit(request):
     if not employee:
         return JsonResponse({"error": "Employee not found"}, status=404)
 
+    # ✅ STEP 1: Validate QR Token
+    try:
+        data = json.loads(request.body)
+
+        token = data.get("token")
+        lat = data.get("lat")
+        lng = data.get("lng")
+        accuracy = data.get("accuracy")
+
+    except Exception:
+        return JsonResponse({"error": "Invalid QR data"}, status=400)
+
+    from .models import QRSession
+
+    qr_session = QRSession.objects.filter(
+        token=token,
+        is_active=True,
+        expires_at__gt=timezone.now(),
+    ).first()
+
+    if not qr_session:
+        return JsonResponse(
+            {"error": "QR code expired or invalid."},
+            status=400
+        )
+    # ✅ LOCATION VALIDATION
+    from math import radians, sin, cos, sqrt, atan2
+
+    PAOMBONG_LAT = 14.866707
+    PAOMBONG_LNG = 120.807094
+    ALLOWED_RADIUS = 1000  # meters
+
+
+    def distance_meters(lat1, lon1, lat2, lon2):
+        R = 6371000
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+        return R * (2 * atan2(sqrt(a), sqrt(1 - a)))
+
+# If GPS data exists, validate location
+    if lat and lng:
+        distance = distance_meters(float(lat), float(lng), PAOMBONG_LAT, PAOMBONG_LNG)
+
+        if distance > ALLOWED_RADIUS:
+            return JsonResponse(
+            {"error": "You are outside the allowed area."},
+            status=403
+        )
+
+    # Optional: deactivate after use
+    qr_session.is_active = False
+    qr_session.save()
+
+    # ✅ STEP 2: Continue attendance logic
     now_dt = timezone.localtime()
     today = now_dt.date()
     now_time = now_dt.time()
@@ -976,9 +1037,9 @@ def employee_qr_submit(request):
         date=today,
     )
 
-    # ✅ TIME IN
+    # TIME IN
     if attendance.time_in is None:
-        attendance.time_in = now_time   # 🔥 FIX HERE
+        attendance.time_in = now_time
         attendance.status = (
             AttendanceRecord.Status.LATE
             if now_time > time(8, 15)
@@ -992,7 +1053,7 @@ def employee_qr_submit(request):
             "message": "Time-in recorded",
         })
 
-    # ✅ TIME OUT (5-minute cooldown)
+    # TIME OUT
     if attendance.time_out is None:
         from datetime import datetime
 
@@ -1004,7 +1065,7 @@ def employee_qr_submit(request):
                 "error": "Please wait 5 minutes before checking out."
             }, status=400)
 
-        attendance.time_out = now_time   # 🔥 FIX HERE
+        attendance.time_out = now_time
         attendance.hours_worked = round(
             diff.total_seconds() / 3600, 2
         )
