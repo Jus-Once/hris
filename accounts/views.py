@@ -730,6 +730,8 @@ def payslip(request):
             selected_label = label
 
     is_job_order = employee.emp_status == Employee.EmpStatus.JOB_ORDER
+    sg_num = None
+    monthly = Decimal("0.00")
 
     # Default safe values
     salary_grade_display = employee.salary_grade or "-"
