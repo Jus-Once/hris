@@ -233,8 +233,8 @@ def adminemployee(request):
     qr_image = None
 
     if show_qr:
-        PAOMBONG_LAT = 14.866837
-        PAOMBONG_LNG = 120.806682
+        PAOMBONG_LAT = 14.866707
+        PAOMBONG_LNG = 120.807094
         ALLOWED_RADIUS_METERS = 1000
 
         payload = {
