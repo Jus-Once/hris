@@ -25,6 +25,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     ".onrender.com",
+    "www.hrispaombong.org",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
