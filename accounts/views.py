@@ -892,13 +892,15 @@ def employeedash(request):
         date=today
     ).first()
 
-    year_start = date(today.year, 1, 1)
+    year_start = max(
+        employee.date_hired,
+        date(today.year, 1, 1)
+    ) if employee.date_hired else date(today.year, 1, 1)
 
-    start_date = max(employee.date_hired, year_start) if employee.date_hired else year_start
+    start_date = year_start  # ✅ ADD THIS
 
     all_workdays = []
     current = start_date
-
     while current <= today:
         if current.weekday() < 5:
             all_workdays.append(current)
@@ -932,7 +934,10 @@ def employeedash(request):
     if is_regular:
         sick_annual = 15
 
-        start_date = employee.date_hired or date(today.year, 1, 1)
+        start_date = max(
+            employee.date_hired,
+            date(today.year, 1, 1)
+        ) if employee.date_hired else date(today.year, 1, 1)
 
         all_workdays = []
         current = start_date
@@ -1012,33 +1017,19 @@ def payslip(request):
 
     today = localdate()
     hire_date = employee.date_hired or today
-    # ✅ Monthly periods
-    periods = []
 
+    # ===== PERIODS =====
+    periods = []
     current = date(hire_date.year, hire_date.month, 1)
 
     while current <= today:
         last_day = calendar.monthrange(current.year, current.month)[1]
-        start = current
-        end = current.replace(day=last_day)
+        periods.append((current, current.replace(day=last_day)))
 
-        periods.append((start, end))
-
-        # move to next month
         if current.month == 12:
             current = current.replace(year=current.year + 1, month=1, day=1)
         else:
             current = current.replace(month=current.month + 1, day=1)
-    current_start = today.replace(day=1)
-    last_day = calendar.monthrange(today.year, today.month)[1]
-    current_end = today.replace(day=last_day)
-
-    if hire_date <= current_end:
-        current_period = (current_start, current_end)
-        if current_period not in periods:
-            periods.append(current_period)
-
-    periods.sort(key=lambda p: (p[0], p[1]))
 
     selected_value = request.GET.get("period")
     if selected_value:
@@ -1046,36 +1037,35 @@ def payslip(request):
             s_str, e_str = selected_value.split("_")
             selected_start = date.fromisoformat(s_str)
             selected_end = date.fromisoformat(e_str)
-        except Exception:
+        except:
             selected_start, selected_end = periods[-1]
     else:
         selected_start, selected_end = periods[-1]
 
-    period_options = []
-    selected_label = ""
-    selected_period_value = f"{selected_start.isoformat()}_{selected_end.isoformat()}"
+    # ✅ ONLY LAST 6 MONTHS (CLEAN DROPDOWN)
+    recent_periods = periods[-6:]
 
-    for start, end in periods:
-        value = f"{start}_{end}"
-        label = f"{start.strftime('%b %d, %Y')} – {end.strftime('%b %d, %Y')}"
-        period_options.append({"value": value, "label": label})
-        if value == selected_period_value:
-            selected_label = label
+    period_options = [
+        (
+            f"{start.strftime('%Y-%m-%d')}_{end.strftime('%Y-%m-%d')}",
+            f"{start.strftime('%b %Y')}"
+        )
+        for start, end in periods[-6:]
+    ]
 
+    selected_period_value = f"{selected_start.strftime('%Y-%m-%d')}_{selected_end.strftime('%Y-%m-%d')}"
+    selected_label = selected_start.strftime('%b %Y')
+
+    # ===== DEFAULTS =====
     is_job_order = employee.emp_status == Employee.EmpStatus.JOB_ORDER
-    sg_num = None
     monthly = Decimal("0.00")
-
-    # Default safe values
-    salary_grade_display = employee.salary_grade or "-"
     daily_rate = Decimal("0.00")
-    payable_days = 0
-    rata = Decimal("0.00")
-
     absence_deduction = Decimal("0.00")
     absent_days = 0
     deductible_absents = 0
     basic_salary = Decimal("0.00")
+    rata = Decimal("0.00")
+
     # ================= JOB ORDER =================
     if is_job_order:
         daily_rate = employee.jo_daily_rate or Decimal("0")
@@ -1093,7 +1083,7 @@ def payslip(request):
 
         basic_salary = (daily_rate * Decimal(payable_days)).quantize(Decimal("0.01"))
 
-        # ================= REGULAR =================
+    # ================= REGULAR =================
     else:
         match = re.search(r"\d+", employee.salary_grade or "")
         sg_num = int(match.group()) if match else None
@@ -1101,37 +1091,22 @@ def payslip(request):
         salary_obj = SalaryGrade.objects.filter(grade=sg_num).first()
         monthly = salary_obj.monthly_salary if salary_obj else Decimal("0")
 
-        if monthly == 0:
-            messages.warning(
-                request,
-                f"Salary Grade SG-{sg_num} has no configured salary."
-            )
-
-        # ✅ Government standard divisor
         daily_rate = (monthly / Decimal("21.75")).quantize(Decimal("0.01"))
 
-
-                # ✅ STEP 1: Generate all weekdays (Mon–Fri)
-        all_workdays = []
-        current = selected_start
-
-        while current <= selected_end:
-            if current.weekday() < 5 and current >= hire_date:
-                all_workdays.append(current)
-            current += timedelta(days=1)
-
-        # ✅ STEP 2: Get attendance records
+        # ✅ GET ATTENDANCE FIRST (FIXED ORDER)
         attendance_qs = AttendanceRecord.objects.filter(
             employee=employee,
             date__range=(selected_start, selected_end)
         )
-
         attendance_map = {att.date: att for att in attendance_qs}
+
+        # ✅ CORRECT ABSENCE COUNT (FINAL)
+        end_date = min(selected_end, today)
 
         total_absents = 0
         current = selected_start
 
-        while current <= selected_end:
+        while current <= end_date:
             if current.weekday() < 5 and current >= hire_date:
                 att = attendance_map.get(current)
 
@@ -1141,31 +1116,23 @@ def payslip(request):
             current += timedelta(days=1)
 
         absent_days = total_absents
-
         basic_salary = monthly
 
-        # ✅ STEP 4: Sick leave logic (15 days annually)
-        sick_leave_total = 15
+        # ===== YEARLY LEAVE =====
+        year_start = max(
+            employee.date_hired,
+            date(today.year, 1, 1)
+        ) if employee.date_hired else date(today.year, 1, 1)
 
-        year_start = employee.date_hired or date(today.year, 1, 1)
-
-        attendance_year = AttendanceRecord.objects.filter(
-            employee=employee,
-            date__range=(year_start, today)
-        )
-
-        # Count absences dynamically (including missing days)
-        # ✅ GET YEAR ATTENDANCE
         year_attendance = AttendanceRecord.objects.filter(
             employee=employee,
             date__range=(year_start, today)
         )
-        # ✅ REUSE SAME LOGIC AS DASHBOARD
+
         year_lates = 0
         year_absents = 0
 
         current = year_start
-
         while current <= today:
             if current.weekday() < 5 and current >= hire_date:
                 att = year_attendance.filter(date=current).first()
@@ -1176,7 +1143,7 @@ def payslip(request):
                     elif att.status == AttendanceRecord.Status.ABSENT:
                         year_absents += 1
                 else:
-                    year_absents += 1  # ✅ MISSING = ABSENT
+                    year_absents += 1
 
             current += timedelta(days=1)
 
@@ -1184,66 +1151,63 @@ def payslip(request):
             Decimal(year_absents) +
             Decimal(year_lates) * Decimal("0.25")
         )
-        total_absents = year_absents
-        total_lates = year_lates
-
-        # ✅ YEARLY USAGE
-        leave_used = (Decimal(total_absents) * 1) + (
-            Decimal(total_lates) * Decimal("0.25")
-        )
 
         remaining_sick_leave = max(Decimal("15") - leave_used, 0)
 
-        # ✅ CURRENT PERIOD
+        # ===== MONTH CALC =====
         period_lates = sum(
             1 for att in attendance_map.values()
             if att.status == AttendanceRecord.Status.LATE
         )
 
-        period_leave_used = (Decimal(absent_days) * 1) + (
+        period_leave_used = (
+            Decimal(absent_days) +
             Decimal(period_lates) * Decimal("0.25")
         )
 
-        # ✅ ONLY EXCESS IS DEDUCTED
-        deductible_absents = max(Decimal(year_absents) - Decimal("15"), 0)
+        if remaining_sick_leave > 0:
+            deductible_absents = max(
+                period_leave_used - remaining_sick_leave,
+                0
+            )
+        else:
+            deductible_absents = period_leave_used
 
-        # ✅ MONEY
-        absence_deduction = (
-            daily_rate * deductible_absents
+        # ✅ HARD CAP (CANNOT EXCEED SALARY)
+        absence_deduction = min(
+            daily_rate * deductible_absents,
+            monthly
         ).quantize(Decimal("0.01"))
+
         rata = Decimal("1000.00")
 
-    # ================= FINAL COMPUTATION =================
+    # ===== FINAL =====
     philhealth = (monthly * Decimal("0.025")).quantize(Decimal("0.01"))
     total_earnings = basic_salary + rata
     total_deductions = philhealth + absence_deduction
     net_pay = total_earnings - total_deductions
-    
+
     context = {
         "employee": employee,
-        "salary_grade": salary_grade_display,
-        "sg_number": sg_num,
-        "sg_monthly": monthly,
+
+        # ✅ ADD THESE BACK (DROPDOWN FIX)
         "period_options": period_options,
         "selected_period_value": selected_period_value,
         "selected_period_label": selected_label,
-        "is_job_order": is_job_order,
+
         "basic_salary": basic_salary,
         "rata": rata,
         "total_earnings": total_earnings,
         "total_deductions": total_deductions,
         "net_pay": net_pay,
         "daily_rate": daily_rate,
-        "payable_days": payable_days,
         "absent_days": absent_days,
         "deductible_absents": deductible_absents,
         "philhealth": philhealth,
         "absence_deduction": absence_deduction,
     }
 
-
     return render(request, "accounts/payslip.html", context)
-
 
 @login_required(login_url="employeelogin")
 def benefits(request):

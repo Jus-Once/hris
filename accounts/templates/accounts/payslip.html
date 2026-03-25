@@ -537,17 +537,7 @@
           <h2 class="card-title">Payslip Summary</h2>
 
           <!-- Pay Period selector -->
-          <form method="get" class="period-form">
-            <label for="period">Pay period:</label>
-            <select name="period" id="period">
-              {% for p in period_options %}
-                <option value="{{ p.value }}" {% if p.value == selected_period_value %}selected{% endif %}>
-                  {{ p.label }}
-                </option>
-              {% endfor %}
-            </select>
-            <button type="submit">Apply</button>
-          </form>
+          
 
           <div class="payslip-header">
             <div>
