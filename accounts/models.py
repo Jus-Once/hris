@@ -1,5 +1,6 @@
 from decimal import Decimal
-
+from django.core.exceptions import ValidationError
+from datetime import date
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -36,9 +37,9 @@ class Employee(models.Model):
     email = models.EmailField(max_length=100, verbose_name="Email Address")
     phone = models.CharField(max_length=20, verbose_name="Phone Number", blank=True)
 
-    position = models.CharField(max_length=80)
-    dept = models.CharField(max_length=80, verbose_name="Department")
-    salary_grade = models.CharField(max_length=20, verbose_name="Salary Grade", blank=True)
+    position = models.CharField(max_length=80, null=True, blank=True)
+    dept = models.CharField(max_length=80, verbose_name="Department", null=True, blank=True)
+    salary_grade = models.CharField(max_length=20, verbose_name="Salary Grade", null=True, blank=True)
 
     dob = models.DateField(verbose_name="Date of Birth", null=True, blank=True)
     date_hired = models.DateField(null=True, blank=True)
@@ -105,7 +106,32 @@ class Employee(models.Model):
     @property
     def full_name(self):
         return f"{self.fname} {self.lname}".strip()
+    
 
+
+    def clean(self):
+        # Age validation (18+)
+        if self.dob:
+            today = date.today()
+            age = today.year - self.dob.year - (
+                (today.month, today.day) < (self.dob.month, self.dob.day)
+            )
+            if age < 18:
+                raise ValidationError({
+                    'dob': 'Employee must be at least 18 years old.'
+                })
+
+        # Date hired validation (no future)
+        if self.date_hired:
+            if self.date_hired > date.today():
+                raise ValidationError({
+                    'date_hired': 'Date hired cannot be in the future.'
+                })
+
+        # Auto-set date hired if empty
+        if not self.date_hired:
+            self.date_hired = date.today()
+    
     class Meta:
         db_table = "employee"
         ordering = ["lname", "fname"]

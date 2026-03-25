@@ -1,9 +1,9 @@
 import re
+import openpyxl
 from decimal import Decimal
 import calendar
 from datetime import date, datetime, time
 from datetime import timedelta
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q, Avg
 from django.contrib.auth import authenticate, login, logout
@@ -21,6 +21,7 @@ import base64
 import qrcode
 from io import BytesIO
 from django.utils.timezone import now
+from django.core.exceptions import ValidationError
 
 
 from .models import (
@@ -275,6 +276,144 @@ def adminemployee(request):
 
     # ================= POST =================
     if request.method == "POST":
+        # Excel upload
+        if request.POST.get("bulk_upload"):
+            excel_file = request.FILES.get("excel_file")
+
+            if not excel_file:
+                messages.error(request, "No file uploaded.")
+                return redirect(reverse("adminemployee") + "?add=1")
+
+            try:
+                wb = openpyxl.load_workbook(excel_file)
+                sheet = wb.active
+            except Exception:
+                messages.error(request, "Invalid Excel file.")
+                return redirect(reverse("adminemployee") + "?add=1")
+
+            # ✅ GET HEADERS
+            headers = [cell.value for cell in sheet[1]]
+
+            # ✅ EXPECTED FORMAT (STRICT)
+            required_columns = [
+                "fname", "lname", "email", "birthday",
+                "employment_status", "department", "position",
+                "salary_grade", "jo_daily_rate"
+            ]
+
+            # ❌ REJECT IF NOT MATCH
+            if headers != required_columns:
+                messages.error(request, "Invalid Excel format. Please use the correct template.")
+                return redirect(reverse("adminemployee") + "?add=1")
+
+            # TEMP SUCCESS MESSAGE
+            # ✅ PROCESS ROWS
+            success_count = 0
+            error_count = 0
+            duplicate_count = 0
+
+            current_id = generate_next_emp_id()
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                try:
+                    # ✅ NORMALIZE FIRST (PUT THIS AT THE VERY TOP)
+                    fname = str(row[0]).strip().title()
+                    lname = str(row[1]).strip().title()
+                    email = str(row[2]).strip().lower()
+                    # ✅ STRONG DUPLICATE CHECK (ALL must match)
+                    dob_value = row[3]
+
+                    if isinstance(dob_value, datetime):
+                        dob_value = dob_value.date()
+                    # 2️⃣ VALIDATE
+                    if not fname or not lname:
+                        error_count += 1
+                        continue
+
+                    if Employee.objects.filter(
+                        fname=fname,
+                        lname=lname,
+                        dob=dob_value,
+                        email=email
+                    ).exists():
+                        duplicate_count += 1
+                        continue
+                    status = str(row[4]).strip().lower()
+                    
+                    # ✅ REGULAR
+                    if status == "regular":
+                        emp_status = "Regular"
+
+                        if not row[5] or not row[6]:
+                            error_count += 1
+                            continue
+
+                        dept = row[5]
+                        position = row[6]
+                        salary_grade = row[7]
+                        jo_rate = None
+
+                    # ✅ JOB ORDER
+                    elif status == "job order":
+                        emp_status = "Job Order"
+                        if row[8] is None:
+                            error_count += 1
+                            continue
+
+                        dept = None
+                        position = None
+                        salary_grade = None
+                        
+                        try: 
+                            jo_rate = Decimal(str(row[8]))
+                        except:
+                            error_count += 1
+                            continue
+                    else:
+                        error_count += 1
+                        continue
+                    emp = Employee(
+                        emp_id=current_id,
+                        fname=fname,
+                        lname=lname,
+                        email=email,
+                        dob=dob_value,
+                        emp_status=emp_status,
+                        dept=dept,
+                        position=position,
+                        salary_grade=salary_grade,
+                        jo_daily_rate=jo_rate,
+                    )
+
+                    emp.full_clean()
+                    emp.save()
+                    # ✅ increment ID
+                    num = int(current_id.replace("EMP", ""))
+                    current_id = f"EMP{num + 1:03d}"
+
+                    # ✅ CREATE USER (same as your system)
+                    if not User.objects.filter(username=emp.emp_id).exists():
+                        user = User.objects.create_user(
+                            username=emp.emp_id,
+                            password=emp.emp_id,
+                            first_name=emp.fname,
+                            last_name=emp.lname,
+                            email=emp.email,
+                        )
+                        emp.user = user
+                        emp.save()
+
+                    success_count += 1
+
+                except ValidationError:
+                    error_count += 1
+                    continue
+
+            # ✅ FINAL MESSAGE
+            messages.success(
+                request,
+                f"Uploaded: {success_count} successful, {duplicate_count} duplicates, {error_count} failed."
+            )
+            return redirect(reverse("adminemployee") + "?add=1")
 
         # ---- Salary Grade update ----
         if request.POST.get("update_sg"):
@@ -329,7 +468,12 @@ def adminemployee(request):
         else:
             emp.jo_daily_rate = None
 
-        emp.save()
+        try:
+            emp.full_clean()  # ✅ triggers validation
+            emp.save()
+        except ValidationError as e:
+            messages.error(request, e.messages[0])
+            return redirect("adminemployee")
 
         if not edit_emp_id and not User.objects.filter(username=emp.emp_id).exists():
             user = User.objects.create_user(
@@ -340,10 +484,9 @@ def adminemployee(request):
                 email=emp.email,
             )
             emp.user = user
-            emp.save()
+            emp.save()  # ✅ keep this as is (DO NOT change)
 
-        return redirect("adminemployee")
-
+            return redirect("adminemployee")
     # ================= GET =================
     today = localdate()
     rec_map = {
@@ -482,9 +625,9 @@ def employee_toggle_attendance(request, emp_id):
         record.time_out = now.time()
 
         in_dt = timezone.make_aware(
-                datetime.combine(today, attendance.time_in)
-        )
-        diff = now_dt - in_dt
+                    datetime.combine(today, record.time_in)
+                )
+        diff = now - in_dt
 
         out_dt = datetime.combine(today, record.time_out)
         start_dt = datetime.combine(today, scheduled_start)
