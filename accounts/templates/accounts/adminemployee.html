@@ -606,11 +606,6 @@
                  onclick="window.location.href='{% url 'adminemployee' %}?edit_sg=1'">
                  Edit Salary Grades
                 </button>
-                <button class="btn btn-ghost"
-                      onclick="window.location.href='{% url 'adminemployee' %}?show_qr=1'">
-                      Generate Attendance QR
-                </button>
-
                 <button id="addEmployeeBtn" class="btn btn-dark"
                         onclick="window.location.href='{% url 'adminemployee' %}?add=1'">
                   Add Employee
@@ -729,41 +724,6 @@
               {% endfor %}
             </tbody>
           </table>
-{% if show_qr %}
-<section class="directory-card" style="margin-top:20px;">
-  <div class="directory-header">
-    <div>
-      <div class="directory-title">Attendance QR Code</div>
-      <div class="directory-sub">
-        Employees must scan this QR within LGU Paombong premises
-      </div>
-    </div>
-  </div>
-
-  <div style="display:flex; gap:24px; align-items:center; flex-wrap:wrap;">
-    <img
-      src="data:image/png;base64,{{ qr_image }}"
-      alt="Attendance QR Code"
-      style="width:220px; height:220px; border:1px solid #ccc; padding:10px; background:#fff;"
-    >
-
-
-    <div style="font-size:15px; color:#555;">
-        <p>
-          <strong>Scan this QR code to record your attendance.</strong>
-        </p>
-
-       <div style="margin-top:14px;">
-          <a href="{% url 'adminemployee' %}" class="btn btn-ghost">
-            Close
-          </a>
-        </div>
-      </div>
-
-  </div>
-</section>
-{% endif %}
-
 </section>
 
         </section>

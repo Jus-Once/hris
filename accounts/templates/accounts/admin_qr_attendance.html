@@ -72,10 +72,14 @@
       QR expires automatically. Employees must be within LGU premises.
     </div>
 
-    <button class="back-btn" onclick="window.location.href='{% url 'adminemployee' %}'">
-      Back to Employees
+    <button class="back-btn" onclick="window.location.href='{% url 'home' %}'">
+      Back to Home
     </button>
   </div>
-
+  <script>
+    setTimeout(function() {
+      window.location.reload();
+    }, 15000); // 15 seconds
+  </script>
 </body>
 </html>

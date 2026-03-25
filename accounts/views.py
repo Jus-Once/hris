@@ -229,33 +229,6 @@ def adminemployee(request):
     salary_grades = SalaryGrade.objects.all().order_by("grade")
 
     employees = Employee.objects.filter(is_archived=show_archived)
-    show_qr = request.GET.get("show_qr") == "1"
-
-    qr_image = None
-
-    if show_qr:
-        from django.utils import timezone
-        from .models import QRSession
-
-        # Deactivate old QR sessions
-        QRSession.objects.filter(is_active=True).update(is_active=False)
-
-        # Create new QR session
-        qr_session = QRSession.objects.create(
-            expires_at=timezone.now() + timedelta(minutes=5),
-            is_active=True,
-        )
-
-        payload = {
-            "token": str(qr_session.token),
-        }
-
-        qr = qrcode.make(json.dumps(payload))
-
-        buffer = BytesIO()
-        qr.save(buffer, format="PNG")
-        qr_image = base64.b64encode(buffer.getvalue()).decode()
-
     if q:
         employees = employees.filter(
             Q(emp_id__icontains=q)
@@ -313,6 +286,129 @@ def adminemployee(request):
             duplicate_count = 0
 
             current_id = generate_next_emp_id()
+            VALID_STRUCTURE = {
+                "Office of the Municipal Mayor": {
+                    "Administrative Aide I (Utility Worker I)": "SG-1",
+                    "Senior Administrative Assistant II / Private Secretary II": "SG-18",
+                    "Administrative Aide IV (Driver II)": "SG-4",
+                    "Security Officer III": "SG-18",
+                    "Barangay Health Aide": "SG-4",
+                },
+                "Office of the Municipal Administrator": {
+                    "MGDH I (Municipal Administrator)": "SG-24",
+                    "Waterworks Supervisor": "SG-14",
+                    "Population Program Worker II": "SG-7",
+                },
+                "Office of the Municipal Vice Mayor": {
+                    "Municipal Vice Mayor": "SG-25",
+                },
+                "Office of the Municipal HRMO": {
+                    "MGDH I (Human Resource Management Officer)": "SG-24",
+                },
+                "Public Employment Service Office": {
+                    "Senior Labor and Employment Officer": "SG-19",
+                },
+                "Office on Public Affairs & Information Assistance": {
+                    "Barangay Health Aide": "SG-4",
+                },
+                "Business Permit and Licensing Office": {
+                    "Senior Administrative Assistant II (Data Controller III)": "SG-15",
+                },
+                "Sangguniang Bayan Members": {
+                    "Sangguniang Bayan Member": "SG-24",
+                },
+                "Office of the Secretary to the Sangguniang Bayan": {
+                    "Secretary to the Sangguniang Bayan": "SG-24",
+                    "Local Legislative Staff Officer III": "SG-18",
+                    "Local Legislative Staff Officer II": "SG-11",
+                    "Local Legislative Staff Assistant I": "SG-8",
+                    "Local Legislative Staff Employee II": "SG-4",
+                    "Administrative Aide II (Bookbinder II)": "SG-2",
+                },
+                "Office of the Municipal Budget": {
+                    "Municipal Budget Officer": "SG-24",
+                    "Administrative Aide IV (Budgeting Aide)": "SG-4",
+                    "Administrative Aide I (Utility Worker I)": "SG-1",
+                },
+                "Office of the Municipal Planning & Development Coordinator": {
+                    "MGDH II (Municipal Planning & Development Coordinator)": "SG-24",
+                    "Administrative Officer I (Planning Officer I)": "SG-11",
+                    "Administrative Aide IV (Clerk II)": "SG-4",
+                    "Administrative Aide I (Utility Worker I)": "SG-1",
+                },
+                "Office of the Municipal Accountant": {
+                    "Administrative Officer V (Municipal Accountant)": "SG-18",
+                    "Administrative Aide IV (Clerk II)": "SG-4",
+                    "Administrative Assistant III (Bookkeeper II)": "SG-9",
+                    "Administrative Aide I (Utility Worker I)": "SG-1",
+                },
+                "Office of the Municipal General Services": {
+                    "Administrative Aide I (Utility Worker I)": "SG-1",
+                    "Administrative Aide IV (Driver II)": "SG-4",
+                    "Water Pump Operator": "SG-4",
+                },
+                "Local Youth Development Office": {
+                    "Youth Development Officer I": "SG-10",
+                },
+                "Office of the Municipal Treasurer": {
+                    "Municipal Treasurer II": "SG-24",
+                    "Cemetery Caretaker": "SG-3",
+                    "Administrative Aide IV (Clerk II)": "SG-4",
+                    "Administrative Officer III (Cashier II)": "SG-14",
+                    "Revenue Collection Clerk II": "SG-7",
+                    "Revenue Collection Clerk I": "SG-5",
+                    "Administrative Aide VI (Cash Clerk III)": "SG-6",
+                },
+                "Market / Fishport": {
+                    "Administrative Aide I (Utility Worker I)": "SG-1",
+                },
+                "Office of the Municipal Assessor": {
+                    "Municipal Assessor II": "SG-24",
+                    "Assessment Clerk I": "SG-6",
+                    "Administrative Aide I (Utility Worker I)": "SG-1",
+                    "Administrative Aide VI (Equipment Operator II)": "SG-8",
+                },
+                "Office of the Municipal Health Officer": {
+                    "Rural Health Physician": "SG-24",
+                    "Nurse I": "SG-15",
+                    "Midwife II": "SG-11",
+                    "Medical Technologist I": "SG-11",
+                    "Ambulance Driver": "SG-4",
+                    "Administrative Aide I (Utility Worker I)": "SG-1",
+                    "Sanitation Inspector I": "SG-9",
+                },
+                "Nutrition Office": {
+                    "Nutrition Officer II": "SG-15",
+                    "Barangay Health Aide": "SG-4",
+                },
+                "Office of the Municipal Civil Registrar": {
+                    "Municipal Civil Registrar II": "SG-24",
+                    "Administrative Aide IV (Bookbinder II)": "SG-4",
+                    "Water Pump Operator": "SG-4",
+                },
+                "Office of the Municipal Social Welfare and Development Officer": {
+                    "Municipal Social Welfare and Development Officer": "SG-24",
+                    "Municipal Social Welfare Assistant": "SG-8",
+                    "Day Care Worker I": "SG-6",
+                },
+                "Office of the Municipal Agriculture": {
+                    "Municipal Agricultural Officer": "SG-20",
+                    "Agricultural Technologist": "SG-10",
+                    "Administrative Aide I (Utility Worker I)": "SG-1",
+                },
+                "Office of the MENRO": {
+                    "Administrative Aide IV (Records Officer II)": "SG-10",
+                    "Administrative Aide I (Utility Worker I)": "SG-1",
+                },
+                "Office of the Municipal Disaster Risk Reduction & Management Officer": {
+                    "Municipal Disaster Risk Reduction and Management Officer": "SG-24",
+                    "Administrative Aide IV (Computer Operator II)": "SG-6",
+                    "Local Disaster Risk Reduction & Management Assistant": "SG-8",
+                },
+                "Office of the Municipal Engineer": {
+                    "Administrative Aide I (Utility Worker I)": "SG-1",
+                },
+            }
             for row in sheet.iter_rows(min_row=2, values_only=True):
                 try:
                     # ✅ NORMALIZE FIRST (PUT THIS AT THE VERY TOP)
@@ -343,15 +439,30 @@ def adminemployee(request):
                     if status == "regular":
                         emp_status = "Regular"
 
-                        if not row[5] or not row[6]:
+                        dept_val = str(row[5]).strip()
+                        pos_val = str(row[6]).strip().title()
+
+                        # ❌ missing fields
+                        if not dept_val or not pos_val:
                             error_count += 1
                             continue
 
-                        dept = row[5]
-                        position = row[6]
-                        salary_grade = row[7]
-                        jo_rate = None
+                        # ❌ invalid department
+                        if dept_val not in VALID_STRUCTURE:
+                            error_count += 1
+                            continue
 
+                        # ❌ invalid position
+                        if pos_val not in VALID_STRUCTURE[dept_val]:
+                            error_count += 1
+                            continue
+
+                        # ✅ AUTO-FIX salary grade (IGNORE Excel SG)
+                        dept = dept_val
+                        position = pos_val
+                        salary_grade = VALID_STRUCTURE[dept_val][pos_val]
+
+                        jo_rate = None
                     # ✅ JOB ORDER
                     elif status == "job order":
                         emp_status = "Job Order"
@@ -512,9 +623,6 @@ def adminemployee(request):
         "show_sg_editor": show_sg_editor,
         "salary_grades": salary_grades,
 
-        # ✅ QR
-        "show_qr": show_qr,
-        "qr_image": qr_image,
     }
 
 
@@ -549,14 +657,19 @@ def employee_recover(request, emp_id):
 @user_passes_test(_is_admin)
 @csrf_protect
 def employee_delete(request, emp_id):
-    # permanent delete (from archives)
     employee = get_object_or_404(Employee, pk=emp_id)
-    if request.method == "POST":
-        if employee.user:
-            employee.user.delete()
-        employee.delete()
-    return redirect("adminemployee")
 
+    if request.method == "POST":
+        try:
+            if employee.user_id:
+                user = User.objects.filter(pk=employee.user_id).first()
+                if user:
+                    user.delete()
+            employee.delete()
+        except Exception:
+            pass
+
+    return redirect(reverse("adminemployee") + "?archived=1")
 
 @login_required
 @user_passes_test(_is_admin)
@@ -1121,8 +1234,6 @@ def employee_qr_submit(request):
         data = json.loads(request.body)
 
         token = data.get("token")
-        lat = data.get("lat")
-        lng = data.get("lng")
         accuracy = data.get("accuracy")
 
     except Exception:
@@ -1143,11 +1254,12 @@ def employee_qr_submit(request):
         )
     # ✅ LOCATION VALIDATION
     from math import radians, sin, cos, sqrt, atan2
+    PAOMBONG_LAT = 14.829224
+    PAOMBONG_LNG = 120.826470
 
-    PAOMBONG_LAT = 14.866707
-    PAOMBONG_LNG = 120.807094
-    ALLOWED_RADIUS = 1000  # meters
-
+   # PAOMBONG_LAT = 14.866707
+   # PAOMBONG_LNG = 120.807094
+    ALLOWED_RADIUS = 5000  # meters
 
     def distance_meters(lat1, lon1, lat2, lon2):
         R = 6371000
@@ -1259,3 +1371,34 @@ def auto_timeout_absentees():
             delta.total_seconds() / 3600, 2
         )
         att.save()
+
+def admin_qr_attendance(request):
+    from django.utils import timezone
+    from .models import QRSession
+
+    # Deactivate old QR sessions
+    QRSession.objects.filter(is_active=True).update(is_active=False)
+
+    # Create new QR session
+    qr_session = QRSession.objects.create(
+        expires_at=timezone.now() + timedelta(minutes=5),
+        is_active=True,
+    )
+
+    payload = {
+        "token": str(qr_session.token),
+    }
+
+    qr = qrcode.make(json.dumps(payload))
+
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    qr_image = base64.b64encode(buffer.getvalue()).decode()
+
+    context = {
+        "qr_image": qr_image,
+        "expires_at": qr_session.expires_at,
+        "radius": 100
+    }
+
+    return render(request, "accounts/admin_qr_attendance.html", context)

@@ -302,6 +302,26 @@
         margin-inline: 18px;
       }
     }
+    /* FLOATING QR BUTTON */
+  .qr-float-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background: #003b8e;
+    color: white;
+    padding: 14px 18px;
+    border-radius: 50px;
+    font-size: 14px;
+    text-decoration: none;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.2);
+    z-index: 999;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .qr-float-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 22px rgba(0,0,0,0.25);
+  }
   </style>
 </head>
 <body>
@@ -412,6 +432,8 @@
   <footer class="footer-text">
     © 2025 Paombong Municipal Hall HRIS. Designed for professional government operations.
   </footer>
-
+  <a href="{% url 'qr_attendance' %}" class="qr-float-btn">
+    📷 Generate QR
+  </a>
 </body>
 </html>

@@ -7,6 +7,8 @@ urlpatterns = [
     path("attendance/submit/", views.employee_qr_submit, name="employee_qr_submit"),
 
 
+    path('qr-attendance/', views.admin_qr_attendance, name='qr_attendance'),
+    
     path('adminlogin', views.adminlogin, name='adminlogin'),
     path('adminlogout', views.adminlogout, name='adminlogout'),
     path('employeelogin', views.employeelogin, name='employeelogin'),
