@@ -892,7 +892,9 @@ def employeedash(request):
         date=today
     ).first()
 
-    start_date = employee.date_hired or date(today.year, 1, 1)
+    year_start = date(today.year, 1, 1)
+
+    start_date = max(employee.date_hired, year_start) if employee.date_hired else year_start
 
     all_workdays = []
     current = start_date
