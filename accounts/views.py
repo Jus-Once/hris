@@ -892,32 +892,85 @@ def employeedash(request):
         date=today
     ).first()
 
-    # Leave / lates / absences overview (current year)
-    start_of_year = date(today.year, 1, 1)
-    year_att_qs = AttendanceRecord.objects.filter(
+    start_date = employee.date_hired or date(today.year, 1, 1)
+
+    all_workdays = []
+    current = start_date
+
+    while current <= today:
+        if current.weekday() < 5:
+            all_workdays.append(current)
+        current += timedelta(days=1)
+
+    attendance_qs = AttendanceRecord.objects.filter(
         employee=employee,
-        date__gte=start_of_year,
+        date__range=(start_date, today)
     )
 
-    total_lates = year_att_qs.filter(
-        status=AttendanceRecord.Status.LATE
-    ).count()
+    attendance_map = {att.date: att for att in attendance_qs}
 
-    total_absents = year_att_qs.filter(
-        status=AttendanceRecord.Status.ABSENT
-    ).count()
+    total_lates = 0
+    total_absents = 0
 
+    for day in all_workdays:
+        att = attendance_map.get(day)
+
+        if att:
+            if att.status == AttendanceRecord.Status.LATE:
+                total_lates += 1
+            elif att.status == AttendanceRecord.Status.ABSENT:
+                total_absents += 1
+        else:
+            total_absents += 1  # ✅ MISSING = ABSENT
+            
     late_absent_occurrences = total_lates + total_absents
 
     # Only REGULAR employees get 15 days sick leave
     is_regular = employee.emp_status == Employee.EmpStatus.REGULAR
     if is_regular:
-        sick_annual = 15  # fixed allocation
-        # 4 lates/absences = 1 full day deducted
-        sick_days_deducted = late_absent_occurrences // 4
+        sick_annual = 15
+
+        start_date = employee.date_hired or date(today.year, 1, 1)
+
+        all_workdays = []
+        current = start_date
+
+        while current <= today:
+            if current.weekday() < 5:
+                all_workdays.append(current)
+            current += timedelta(days=1)
+
+        attendance_qs = AttendanceRecord.objects.filter(
+            employee=employee,
+            date__range=(start_date, today)
+        )
+
+        attendance_map = {att.date: att for att in attendance_qs}
+
+        total_lates = 0
+        total_absents = 0
+
+        for day in all_workdays:
+            att = attendance_map.get(day)
+
+            if att:
+                if att.status == AttendanceRecord.Status.LATE:
+                    total_lates += 1
+                elif att.status == AttendanceRecord.Status.ABSENT:
+                    total_absents += 1
+            else:
+                total_absents += 1  # ✅ MISSING = ABSENT
+
+        sick_days_deducted = (
+            Decimal(total_absents) * 1 +
+            Decimal(total_lates) * Decimal("0.25")
+        )
+
         if sick_days_deducted > sick_annual:
-            sick_days_deducted = sick_annual
-        sick_remaining = sick_annual - sick_days_deducted
+            sick_days_deducted = Decimal(sick_annual)
+
+        sick_remaining = Decimal(sick_annual) - sick_days_deducted
+
     else:
         sick_annual = 0
         sick_days_deducted = 0
@@ -957,8 +1010,26 @@ def payslip(request):
 
     today = localdate()
     hire_date = employee.date_hired or today
-    periods = get_half_month_periods(hire_date, today)
-    current_start, current_end = get_current_period(today)
+    # ✅ Monthly periods
+    periods = []
+
+    current = date(hire_date.year, hire_date.month, 1)
+
+    while current <= today:
+        last_day = calendar.monthrange(current.year, current.month)[1]
+        start = current
+        end = current.replace(day=last_day)
+
+        periods.append((start, end))
+
+        # move to next month
+        if current.month == 12:
+            current = current.replace(year=current.year + 1, month=1, day=1)
+        else:
+            current = current.replace(month=current.month + 1, day=1)
+    current_start = today.replace(day=1)
+    last_day = calendar.monthrange(today.year, today.month)[1]
+    current_end = today.replace(day=last_day)
 
     if hire_date <= current_end:
         current_period = (current_start, current_end)
@@ -999,6 +1070,10 @@ def payslip(request):
     payable_days = 0
     rata = Decimal("0.00")
 
+    absence_deduction = Decimal("0.00")
+    absent_days = 0
+    deductible_absents = 0
+    basic_salary = Decimal("0.00")
     # ================= JOB ORDER =================
     if is_job_order:
         daily_rate = employee.jo_daily_rate or Decimal("0")
@@ -1031,32 +1106,117 @@ def payslip(request):
             )
 
         # ✅ Government standard divisor
-        daily_rate = (monthly / Decimal("22")).quantize(Decimal("0.01"))
+        daily_rate = (monthly / Decimal("21.75")).quantize(Decimal("0.01"))
 
 
-        # Count payable attendance days (weekday only)
-        attendance_days = AttendanceRecord.objects.filter(
+                # ✅ STEP 1: Generate all weekdays (Mon–Fri)
+        all_workdays = []
+        current = selected_start
+
+        while current <= selected_end:
+            if current.weekday() < 5 and current >= hire_date:
+                all_workdays.append(current)
+            current += timedelta(days=1)
+
+        # ✅ STEP 2: Get attendance records
+        attendance_qs = AttendanceRecord.objects.filter(
             employee=employee,
-            date__range=(selected_start, selected_end),
-            status__in=[
-                AttendanceRecord.Status.PRESENT,
-                AttendanceRecord.Status.LATE,
-                AttendanceRecord.Status.FIELDWORK,
-                AttendanceRecord.Status.HEALTH,
-            ],
-        ).values_list("date", flat=True).distinct()
+            date__range=(selected_start, selected_end)
+        )
 
-        payable_days = sum(1 for d in attendance_days if d.weekday() < 5)
+        attendance_map = {att.date: att for att in attendance_qs}
 
-        basic_salary = (daily_rate * Decimal(payable_days)).quantize(Decimal("0.01"))
+        total_absents = 0
+        current = selected_start
 
+        while current <= selected_end:
+            if current.weekday() < 5 and current >= hire_date:
+                att = attendance_map.get(current)
+
+                if not att or att.status == AttendanceRecord.Status.ABSENT:
+                    total_absents += 1
+
+            current += timedelta(days=1)
+
+        absent_days = total_absents
+
+        basic_salary = monthly
+
+        # ✅ STEP 4: Sick leave logic (15 days annually)
+        sick_leave_total = 15
+
+        year_start = employee.date_hired or date(today.year, 1, 1)
+
+        attendance_year = AttendanceRecord.objects.filter(
+            employee=employee,
+            date__range=(year_start, today)
+        )
+
+        # Count absences dynamically (including missing days)
+        # ✅ GET YEAR ATTENDANCE
+        year_attendance = AttendanceRecord.objects.filter(
+            employee=employee,
+            date__range=(year_start, today)
+        )
+        # ✅ REUSE SAME LOGIC AS DASHBOARD
+        year_lates = 0
+        year_absents = 0
+
+        current = year_start
+
+        while current <= today:
+            if current.weekday() < 5 and current >= hire_date:
+                att = year_attendance.filter(date=current).first()
+
+                if att:
+                    if att.status == AttendanceRecord.Status.LATE:
+                        year_lates += 1
+                    elif att.status == AttendanceRecord.Status.ABSENT:
+                        year_absents += 1
+                else:
+                    year_absents += 1  # ✅ MISSING = ABSENT
+
+            current += timedelta(days=1)
+
+        leave_used = (
+            Decimal(year_absents) +
+            Decimal(year_lates) * Decimal("0.25")
+        )
+        total_absents = year_absents
+        total_lates = year_lates
+
+        # ✅ YEARLY USAGE
+        leave_used = (Decimal(total_absents) * 1) + (
+            Decimal(total_lates) * Decimal("0.25")
+        )
+
+        remaining_sick_leave = max(Decimal("15") - leave_used, 0)
+
+        # ✅ CURRENT PERIOD
+        period_lates = sum(
+            1 for att in attendance_map.values()
+            if att.status == AttendanceRecord.Status.LATE
+        )
+
+        period_leave_used = (Decimal(absent_days) * 1) + (
+            Decimal(period_lates) * Decimal("0.25")
+        )
+
+        # ✅ ONLY EXCESS IS DEDUCTED
+        deductible_absents = max(Decimal(year_absents) - Decimal("15"), 0)
+
+        # ✅ MONEY
+        absence_deduction = (
+            daily_rate * deductible_absents
+        ).quantize(Decimal("0.01"))
         rata = Decimal("1000.00")
 
     # ================= FINAL COMPUTATION =================
+    philhealth = (monthly * Decimal("0.025")).quantize(Decimal("0.01"))
     total_earnings = basic_salary + rata
-    total_deductions = Decimal("0.00")
-    net_pay = total_earnings
-
+    total_deductions = philhealth + absence_deduction
+    net_pay = total_earnings - total_deductions
+    
     context = {
         "employee": employee,
         "salary_grade": salary_grade_display,
@@ -1073,6 +1233,10 @@ def payslip(request):
         "net_pay": net_pay,
         "daily_rate": daily_rate,
         "payable_days": payable_days,
+        "absent_days": absent_days,
+        "deductible_absents": deductible_absents,
+        "philhealth": philhealth,
+        "absence_deduction": absence_deduction,
     }
 
 
@@ -1256,11 +1420,9 @@ def employee_qr_submit(request):
         )
     # ✅ LOCATION VALIDATION
     from math import radians, sin, cos, sqrt, atan2
-    PAOMBONG_LAT = 14.829224
-    PAOMBONG_LNG = 120.826470
 
-   # PAOMBONG_LAT = 14.866707
-   # PAOMBONG_LNG = 120.807094
+    PAOMBONG_LAT = 14.866707
+    PAOMBONG_LNG = 120.807094
     ALLOWED_RADIUS = 5000  # meters
 
     def distance_meters(lat1, lon1, lat2, lon2):

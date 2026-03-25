@@ -610,26 +610,35 @@
 
               <tr>
                 <td>Basic Salary</td>
-                <td class="align-right">
-                    {{ basic_salary|floatformat:2 }}
-                </td>
+                <td class="align-right">{{ basic_salary|floatformat:2 }}</td>
               </tr>
 
-          <tr>
-              <td>RATA</td>
-              <td class="align-right">
-                  {{ rata|floatformat:2 }}
-              </td>
-          </tr>
+              <tr>
+                <td>RATA</td>
+                <td class="align-right">{{ rata|floatformat:2 }}</td>
+              </tr>
 
-          <tr class="totals-row">
-            <td>Total Earnings</td>
-            <td class="align-right">
-               {{ total_earnings|floatformat:2 }}
-            </td>
-          </tr>
+              <tr class="totals-row">
+                <td>Total Earnings</td>
+                <td class="align-right">{{ total_earnings|floatformat:2 }}</td>
+              </tr>
 
-        </tbody>
+              <tr>
+                <td>PhilHealth (2.5%)</td>
+                <td class="align-right">-{{ philhealth|floatformat:2 }}</td>
+              </tr>
+
+              <tr>
+                <td>Absence Deduction</td>
+                <td class="align-right">-{{ absence_deduction|floatformat:2 }}</td>
+              </tr>
+
+              <tr class="totals-row">
+                <td>Net Pay</td>
+                <td class="align-right">{{ net_pay|floatformat:2 }}</td>
+              </tr>
+
+              </tbody>
     </table>
 
 
