@@ -1234,6 +1234,8 @@ def employee_qr_submit(request):
         data = json.loads(request.body)
 
         token = data.get("token")
+        lat = data.get("lat")
+        lng = data.get("lng")
         accuracy = data.get("accuracy")
 
     except Exception:
@@ -1269,7 +1271,7 @@ def employee_qr_submit(request):
         return R * (2 * atan2(sqrt(a), sqrt(1 - a)))
 
 # If GPS data exists, validate location
-    if lat and lng:
+    if lat is not None and lng is not None:
         distance = distance_meters(float(lat), float(lng), PAOMBONG_LAT, PAOMBONG_LNG)
 
         if distance > ALLOWED_RADIUS:
