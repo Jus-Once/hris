@@ -1,0 +1,711 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LGU Paombong – Leave Requests</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --blue-main: #003b8e;
+      --blue-dark: #1f2955;
+      --blue-footer: #003b8e;
+      --bg-page: #eef3ff;
+      --card-bg: #ffffff;
+      --card-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+      --text-main: #222222;
+      --text-muted: #5d6470;
+      --border-light: #dde2f0;
+      --radius-card: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: var(--blue-main);
+      color: #ffffff;
+      padding: 10px 40px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .brand-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-title {
+      font-family: "Times New Roman", serif;
+      font-size: 26px;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+    }
+
+    .top-nav {
+      display: flex;
+      gap: 24px;
+      font-size: 14px;
+      align-items: center;
+    }
+
+    .top-nav a {
+      color: #ffffff;
+      text-decoration: none;
+      position: relative;
+      padding-bottom: 2px;
+    }
+
+    .top-nav a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 0;
+      height: 2px;
+      background: #ffffff;
+      transition: width 0.2s ease;
+    }
+
+    .top-nav a:hover::after,
+    .top-nav a.active::after {
+      width: 100%;
+    }
+
+    .sub-bar {
+      background: var(--blue-dark);
+      color: #ffffff;
+      padding: 8px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sub-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .sub-logo {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #ffe700;
+      border: 3px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      text-align: center;
+      color: #000;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .sub-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .sub-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sub-text-small {
+      font-size: 11px;
+    }
+
+    .sub-text-main {
+      font-size: 18px;
+      font-style: italic;
+    }
+
+    .sub-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .notif-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid #ffc857;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      background: transparent;
+    }
+
+    .user-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .logout-btn {
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #00a0e3;
+      color: #ffffff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background: #0086c0;
+    }
+
+    main {
+      flex: 1;
+      padding: 24px 40px 40px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 22px;
+      align-items: start; /* ⬅ prevents vertical stretching */
+    }
+
+   .sidebar {
+      width: 260px;
+      min-width: 260px;
+      max-width: 260px;
+
+      height: 300px;
+      min-height: 300px;
+      max-height: 300px;
+
+      overflow: hidden; /* ⬅ important */
+
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+      padding: 24px 18px;
+
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .side-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 17px;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .side-item-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: #f4f6fb;
+    }
+
+    .side-item:hover {
+      color: var(--blue-main);
+    }
+
+    .side-item:hover .side-item-icon {
+      background: #e4ebff;
+    }
+
+    .side-item.active {
+      font-weight: 600;
+      color: var(--blue-main);
+    }
+
+    .payslip-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: var(--card-shadow);
+      padding: 18px 22px;
+      border: 1px solid #e0e4f0;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-family: "Times New Roman", serif;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .payslip-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .payslip-header span {
+      display: block;
+    }
+
+    .label {
+      font-weight: 600;
+    }
+
+    .payslip-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .payslip-table th,
+    .payslip-table td {
+      padding: 8px 6px;
+      border-bottom: 1px solid #f0f0f5;
+    }
+
+    .payslip-table th {
+      text-align: left;
+      font-family: "Times New Roman", serif;
+      font-size: 15px;
+    }
+
+    .align-right {
+      text-align: right;
+    }
+
+    .totals-row {
+      font-weight: 600;
+      border-top: 1px solid #dde2f0;
+    }
+
+    .note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    footer {
+      background: var(--blue-footer);
+      color: #ffffff;
+      padding: 14px 40px 18px;
+      font-size: 12px;
+    }
+
+    .footer-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .footer-flex {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .footer-contact-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-contact-row span:first-child {
+      font-size: 16px;
+    }
+
+    /* PRINT BUTTON */
+    .print-btn {
+      background: #003b8e;
+      color: #ffffff;
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      float: right;
+      margin-top: -6px;
+      margin-bottom: 8px;
+    }
+    .print-btn:hover {
+      background: #00275c;
+    }
+
+    /* Period selector */
+    .period-form {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    .period-form select {
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #cfd3e0;
+      font-size: 13px;
+    }
+    .period-form button {
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid #003b8e;
+      background: #003b8e;
+      color: #ffffff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .period-form button:hover {
+      background: #00275c;
+    }
+
+    @media (max-width: 1024px) {
+      .layout {
+        grid-template-columns: 230px minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      main {
+        padding: 18px 16px 24px;
+      }
+      .top-bar,
+      .sub-bar,
+      footer {
+        padding-inline: 16px;
+      }
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+@media print {
+
+  /* Hide UI elements */
+  .top-bar,
+  .sub-bar,
+  .sidebar,
+  footer,
+  .period-form,
+  .print-btn {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff;
+    margin: 0;
+  }
+
+  main {
+    padding: 0;
+  }
+
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("{% static 'accounts/images/HRISLOGO.jpg' %}");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 300px;
+  opacity: 0.5;
+  z-index: 0;
+  pointer-events: none;
+}
+
+
+.card {
+  box-shadow: none;
+  border-radius: 0;
+  position: relative;
+}
+
+.payslip-wrapper {
+  min-height: 100vh;
+}
+
+
+
+
+}
+.alert {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.alert.success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.alert.error {
+  background: #f8d7da;
+  color: #721c24;
+}
+  </style>
+</head>
+<body>
+
+
+  <div class="sub-bar">
+    <div class="sub-left">
+      <div class="sub-logo">
+        <img src="{% static 'accounts/images/HRISLOGO.jpg' %}" alt="HRIS Seal">
+      </div>
+      <div class="sub-text">
+        <div class="sub-text-small">Human Resource Information</div>
+        <div class="sub-text-main">System of Paombong</div>
+      </div>
+    </div>
+
+    <div class="sub-right">
+      <span>
+        Welcome,
+        {% if employee %}
+          {{ employee.full_name }}!
+        {% else %}
+          {{ request.user.get_full_name|default:request.user.username }}!
+        {% endif %}
+      </span>
+      <div class="user-circle" onclick="window.location.href='{% url 'employee_profile' %}'">
+        👤
+      </div>
+      <button class="logout-btn" onclick="window.location.href='{% url 'employeelogin' %}'">
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <main>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="side-item" onclick="window.location.href='{% url 'employeedash' %}'">
+          <div class="side-item-icon">🏠</div>
+          <span>Dashboard</span>
+        </div>
+
+        <div class="side-item active" onclick="window.location.href='{% url 'employee_leave' %}'">
+          <div class="side-item-icon">➜]</div>
+          <span>Leave Requests</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'help' %}'">
+          <div class="side-item-icon">🆘</div>
+          <span>Help &amp; Support</span>
+        </div>
+
+        <div class="side-item" onclick="window.location.href='{% url 'employee_profile' %}'">
+          <div class="side-item-icon">👤</div>
+          <span>My Profile</span>
+        </div>
+      </aside>
+
+      <section class="payslip-wrapper">
+        <article class="card">
+
+          <h2 class="card-title">Leave Requests</h2>
+
+            <form method="post" enctype="multipart/form-data" style="margin-bottom:20px;">
+            {% csrf_token %}
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+
+                <div>
+                <label>Leave Type</label>
+                <select name="leave_type" required style="width:100%; padding:6px;">
+                    <option value="VL">Vacation Leave</option>
+                    <option value="SL">Sick Leave</option>
+                    <option value="SPL">Special Privilege Leave</option>
+                    <option value="WL">Wellness Leave</option>
+                    <option value="PL">Paternity Leave</option>
+                    <option value="ML">Maternity Leave</option>
+                    <option value="SP">Solo Parent Leave</option>
+                    <option value="EL">Emergency Leave</option>
+                </select>
+                </div>
+
+                <div>
+                <label>Attachment (optional)</label>
+                <input type="file" name="attachment" style="width:100%;">
+                </div>
+
+                <div>
+                <label>Start Date</label>
+                <input type="date" name="start_date" required style="width:100%;">
+                </div>
+
+                <div>
+                <label>End Date</label>
+                <input type="date" name="end_date" required style="width:100%;" min="{{ today|date:'Y-m-d' }}">    
+                </div>
+
+                <div style="grid-column: span 2;">
+                <small style="color:gray;">
+                    Note: Weekends are excluded from leave days.
+                </small>
+                </div>
+
+            </div>
+
+            <div style="margin-top:12px;">
+                <label>Reason</label>
+                <textarea name="reason" required style="width:100%; padding:8px;"></textarea>
+            </div>
+
+            {% if active_leave %}
+              <button type="submit" disabled style="
+                  background:#003b8e;
+                  color:white;
+                  padding:8px 16px;
+                  border:none;
+                  border-radius:6px;
+                  cursor:not-allowed;
+                  opacity:0.6;
+                  margin-top:12px;">
+                  Submit Request
+              </button>
+              {% else %}
+              <button type="submit" style="
+                  background:#003b8e;
+                  color:white;
+                  padding:8px 16px;
+                  border:none;
+                  border-radius:6px;
+                  cursor:pointer;
+                  margin-top:12px;">
+                  Submit Request
+              </button>
+              {% endif %}
+            </form>
+
+            <script>
+                  const start = document.querySelector('input[name="start_date"]');
+                  const end = document.querySelector('input[name="end_date"]');
+
+                  start.addEventListener("change", () => {
+                      end.min = start.value;
+                  });
+            </script>
+
+            <hr>
+
+            <h3 style="margin-bottom:10px;">Your Requests</h3>
+            {% if error %}
+              <div style="background:#f8d7da; color:#721c24; padding:10px; border-radius:6px; margin-bottom:10px;">
+                {{ error }}
+              </div>
+            {% endif %}
+
+            {% if leaves %}
+              {% with latest=leaves.0 %}
+                {% if latest.status == "APPROVED" %}
+                  <div class="alert success">
+                    Your latest leave was approved.
+                  </div>
+                {% elif latest.status == "REJECTED" %}
+                  <div class="alert error">
+                    Your latest leave was rejected.
+                  </div>
+                {% endif %}
+              {% endwith %}
+            {% endif %}
+
+            <table class="payslip-table">
+            <thead>
+                <tr>
+                <th>Type</th>
+                <th>Dates</th>
+                <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if leaves %}
+                    {% for leave in leaves %}
+                    <tr>
+                        <td>{{ leave.get_leave_type_display }}</td>
+                        <td>{{ leave.start_date }} - {{ leave.end_date }}</td>
+                        <td>
+                            {% if leave.status == "APPROVED" %}
+                                <span style="color:green;">Approved</span>
+                            {% elif leave.status == "REJECTED" %}
+                                <span style="color:red;">Rejected</span>
+                            {% else %}
+                                <span style="color:orange;">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="3" style="text-align:center; color:gray;">
+                            No leave requests yet
+                        </td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-title">Contact Us</div>
+    <div class="footer-flex">
+      <div>Email or phone us to learn how HRMO can solve your problems</div>
+      <div class="footer-contact-row">
+        <span>📞</span>
+        <span>(044) 760-4800</span>
+      </div>
+      <div class="footer-contact-row">
+        <span>📧</span>
+        <span>hrmpaombong2024@gmail.com</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

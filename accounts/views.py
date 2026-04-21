@@ -22,7 +22,7 @@ import qrcode
 from io import BytesIO
 from django.utils.timezone import now
 from django.core.exceptions import ValidationError
-
+from .models import LeaveRequest
 
 from .models import (
     Employee,
@@ -39,6 +39,16 @@ from .models import (
 ANNUAL_VACATION_LEAVE_DAYS = 15
 ANNUAL_SICK_LEAVE_DAYS = 15
 
+LEAVE_LIMITS = {
+    "VL": 15,     # Vacation Leave (cumulative)
+    "SL": 15,     # Sick Leave (cumulative)
+    "SPL": 3,     # Special Privilege (non-cumulative)
+    "WL": 5,      # Wellness Leave (non-cumulative)
+    "PL": 7,      # Paternity Leave
+    "ML": 105,    # Maternity Leave
+    "SP": 7,      # Solo Parent Leave
+    "EL": 5,      # Emergency Leave
+}
 
 def generate_next_emp_id():
     last = Employee.objects.order_by("-emp_id").first()
@@ -246,6 +256,46 @@ def adminemployee(request):
 
     show_form = request.GET.get("add") == "1" or bool(edit_id)
     edit_employee = get_object_or_404(Employee, pk=edit_id) if edit_id else None
+
+    # ✅ LEAVE APPROVAL HANDLER (SAFE)
+    leave_id = request.POST.get("leave_id")
+    action = request.POST.get("action")
+
+    if leave_id and action:
+        try:
+            leave = LeaveRequest.objects.get(id=leave_id)
+
+            if action == "approve":
+                leave.status = "APPROVED"
+                leave.responded_at = timezone.now()
+
+                # ✅ CREATE ATTENDANCE = ON LEAVE
+                current = leave.start_date
+                while current <= leave.end_date:
+                    if current.weekday() < 5:  # weekdays only
+                        record, created = AttendanceRecord.objects.get_or_create(
+                            employee=leave.employee,
+                            date=current,
+                        )
+
+                        if record.status in [
+                            AttendanceRecord.Status.ABSENT,
+                            AttendanceRecord.Status.LATE,
+                            AttendanceRecord.Status.PRESENT,
+                            None
+                        ]:
+                            record.status = AttendanceRecord.Status.ON_LEAVE
+                            record.save()
+                    current += timedelta(days=1)
+            elif action == "reject":
+                leave.status = "REJECTED"
+                leave.responded_at = timezone.now()
+
+            leave.save()
+        except LeaveRequest.DoesNotExist:
+            pass
+
+        return redirect(request.path + "?leave=1")
 
     # ================= POST =================
     if request.method == "POST":
@@ -609,6 +659,22 @@ def adminemployee(request):
     for e in employees:
         e.today_att = rec_map.get(e.emp_id)
 
+    leave_requests = LeaveRequest.objects.select_related("employee").order_by("-date_filed")
+
+    status_filter = request.GET.get("status")
+
+    if status_filter:
+        leave_requests = leave_requests.filter(status=status_filter)
+    else:
+        pending = leave_requests.filter(status="PENDING")
+
+        recent = leave_requests.filter(
+            status__in=["APPROVED", "REJECTED"],
+            responded_at__gte=timezone.now() - timedelta(days=2)
+        )
+
+        leave_requests = (pending | recent).distinct()
+
     context = {
         "employees": employees,
         "q": q,
@@ -622,6 +688,8 @@ def adminemployee(request):
         "is_archives": show_archived,
         "show_sg_editor": show_sg_editor,
         "salary_grades": salary_grades,
+        "show_leave": request.GET.get("leave") == "1",
+        "leave_requests": leave_requests,
 
     }
 
@@ -789,6 +857,7 @@ def time_tracking(request):
         status__in=[
             AttendanceRecord.Status.FIELDWORK,
             AttendanceRecord.Status.HEALTH,
+            AttendanceRecord.Status.ON_LEAVE,
         ]
     ).count()
 
@@ -879,6 +948,32 @@ def employeedash(request):
     employee = _get_employee_from_user(request.user)
     if not employee:
         return redirect("employeelogin")
+    
+    leave_balances = []
+
+    for code, limit in LEAVE_LIMITS.items():
+        approved = LeaveRequest.objects.filter(
+            employee=employee,
+            leave_type=code,
+            status="APPROVED"
+        )
+
+        used_days = 0
+
+        for leave in approved:
+            current = leave.start_date
+            while current <= leave.end_date:
+                if current.weekday() < 5:
+                    used_days += 1
+                current += timedelta(days=1)
+
+        remaining = max(limit - used_days, 0)
+
+        leave_balances.append({
+            "name": dict(LeaveRequest.LeaveType.choices).get(code, code),
+            "remaining": remaining,
+            "limit": limit
+        })
 
     auto_timeout_absentees()
 
@@ -887,6 +982,12 @@ def employeedash(request):
 
     # Today in PST
     today = localdate()
+    active_leave = LeaveRequest.objects.filter(
+        employee=employee,
+        status="APPROVED",
+        start_date__lte=today,
+        end_date__gte=today
+    ).exists()
     today_rec = AttendanceRecord.objects.filter(
         employee=employee,
         date=today
@@ -991,10 +1092,13 @@ def employeedash(request):
         "summary__week_end", "id"
     )
 
+    
     context = {
         "employee": employee,
         "announcements": anns,
         "today_attendance": today_rec,
+
+        "active_leave": active_leave,
 
         "total_lates": total_lates,
         "total_absents": total_absents,
@@ -1006,6 +1110,8 @@ def employeedash(request):
         "sick_remaining": sick_remaining,
 
         "pending_activities": pending_activities,
+
+        "leave_balances": leave_balances,
     }
     return render(request, "accounts/employeedash.html", context)
 
@@ -1330,6 +1436,107 @@ def employee_profile(request):
     }
     return render(request, "accounts/employee_profile.html", context)
 
+from django.shortcuts import render, redirect
+
+
+@login_required(login_url="employeelogin")
+def employee_leave(request):
+    employee = _get_employee_from_user(request.user)
+
+    if request.method == "POST":
+        today = date.today()
+
+        active_leave = LeaveRequest.objects.filter(
+            employee=employee,
+            status=LeaveRequest.Status.APPROVED,
+            start_date__lte=today,
+            end_date__gte=today
+        ).exists()
+
+        if active_leave:
+            return render(request, "accounts/employee_leave.html", {
+                "leaves": LeaveRequest.objects.filter(employee=employee).order_by("-date_filed"),
+                "today": today,
+                "error": "You already have an active leave."
+            })
+        leave_type = request.POST.get("leave_type")
+        start_date = request.POST.get("start_date")
+        end_date = request.POST.get("end_date")
+        reason = request.POST.get("reason")
+        attachment = request.FILES.get("attachment")
+
+
+        if not start_date or not end_date:
+            return redirect("employee_leave")
+        
+        start = date.fromisoformat(start_date)
+        end = date.fromisoformat(end_date)
+
+        # ✅ count weekdays only
+        requested_days = 0
+        current = start
+
+        while current <= end:
+            if current.weekday() < 5:
+                requested_days += 1
+            current += timedelta(days=1)
+
+        approved_leaves = LeaveRequest.objects.filter(
+            employee=employee,
+            leave_type=leave_type,
+            status="APPROVED"
+        )
+
+        used_days = 0
+
+        for leave in approved_leaves:
+            current = leave.start_date
+            while current <= leave.end_date:
+                if current.weekday() < 5:
+                    used_days += 1
+                current += timedelta(days=1)
+
+        limit = LEAVE_LIMITS.get(leave_type, 0)
+        remaining = max(limit - used_days, 0)
+
+        if requested_days > remaining:
+            return render(request, "accounts/employee_leave.html", {
+                "leaves": LeaveRequest.objects.filter(employee=employee).order_by("-date_filed"),
+                "today": date.today(),
+                "error": f"You only have {remaining} day(s) left for this leave type."
+            })
+        
+        LeaveRequest.objects.create(
+            employee=employee,
+            leave_type=leave_type,
+            start_date=start_date,
+            end_date=end_date,
+            reason=reason,
+            attachment=attachment
+        )
+
+        return redirect("employee_leave")
+    
+    leaves = LeaveRequest.objects.filter(employee=employee).order_by("-date_filed")
+    today = date.today()
+
+    active_leave = LeaveRequest.objects.filter(
+        employee=employee,
+        status=LeaveRequest.Status.APPROVED,
+        start_date__lte=today,
+        end_date__gte=today
+    ).exists()
+    status_filter = request.GET.get("status")
+
+    if status_filter:
+        leaves = leaves.filter(status=status_filter)
+
+    return render(request, "accounts/employee_leave.html", {
+        "leaves": leaves,
+        "today": date.today(),
+        "active_leave": active_leave,
+    })
+
 @login_required
 @user_passes_test(_is_admin)
 def employee_list(request):
@@ -1501,6 +1708,7 @@ def auto_timeout_absentees():
             delta.total_seconds() / 3600, 2
         )
         att.save()
+
 
 def admin_qr_attendance(request):
     from django.utils import timezone

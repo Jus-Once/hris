@@ -144,6 +144,7 @@ class AttendanceRecord(models.Model):
         ABSENT = "absent", "Absent"
         FIELDWORK = "fieldwork", "Fieldwork"
         HEALTH = "health", "Health-related"
+        ON_LEAVE = "ON LEAVE", "On Leave"
 
     employee = models.ForeignKey(
         Employee,
@@ -363,3 +364,42 @@ class QRSession(models.Model):
     def __str__(self):
         return f"QR {self.token} (active={self.is_active})"
 
+class LeaveRequest(models.Model):
+    class LeaveType(models.TextChoices):
+        VACATION = "VL", "Vacation Leave"
+        SICK = "SL", "Sick Leave"
+        SPL = "SPL", "Special Privilege Leave"
+        WELLNESS = "WL", "Wellness Leave"
+        PATERNITY = "PL", "Paternity Leave"
+        MATERNITY = "ML", "Maternity Leave"
+        SOLO_PARENT = "SP", "Solo Parent Leave"
+        EMERGENCY = "EL", "Emergency Leave"
+        
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        APPROVED = "APPROVED", "Approved"
+        REJECTED = "REJECTED", "Rejected"
+
+    employee = models.ForeignKey("Employee", on_delete=models.CASCADE)
+
+    leave_type = models.CharField(max_length=10, choices=LeaveType.choices)
+
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    reason = models.TextField()
+    attachment = models.ImageField(upload_to="leave_proofs/", null=True, blank=True)
+
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING
+    )
+    
+    responded_at = models.DateTimeField(null=True, blank=True)
+
+    date_filed = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee} - {self.leave_type} ({self.status})"

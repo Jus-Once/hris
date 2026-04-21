@@ -145,6 +145,19 @@
       margin: 0 40px 16px;
     }
 
+    .print-table {
+      display: none;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .print-table th,
+    .print-table td {
+      border: 1px solid #000;
+      padding: 6px;
+      text-align: left;
+    }
     /* MAIN LAYOUT */
     main {
       flex: 1;
@@ -212,11 +225,25 @@
     }
 
     /* Recent Time Logs */
+    
     .logs-wrapper {
       display: flex;
       flex-direction: column;
       gap: 10px;
       font-size: 13px;
+
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .logs-wrapper::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .logs-wrapper::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 4px;
     }
 
     .log-item {
@@ -422,8 +449,44 @@
 .print-date {
   display: none;
 }
+
+.log-badge.present {
+  background: #2ecc71;
+  color: #fff;
+  border: none;
+}
+
+.log-badge.absent {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+}
+
+.log-badge.late {
+  background: #e67e22;
+  color: #fff;
+  border: none;
+}
+
+.log-badge.onleave {
+  background: orange;
+  color: #fff;
+  border: none;
+}
+
 @media print {
 
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+
+  main {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
   body {
     margin: 0;
   }
@@ -432,18 +495,43 @@
     padding: 0;
   }
 
+  .print-table {
+    display: table;
+  }
+
+  .logs-wrapper {
+    display: none;
+  }
+
+  .log-name {
+    font-weight: normal;
+  }
+
+  .log-sub {
+    display: none; /* remove "last activity" clutter */
+  }
+
+  .log-hours {
+    text-align: left;
+  }
+
+  .log-badge {
+    background: none !important;
+    color: #000 !important;
+    border: none !important;
+  }
   body::before {
     content: "";
     position: fixed;
-    top: 50%;
+    top: 100px;      /* 👈 move it down slightly */
     left: 50%;
+    transform: translateX(-50%);
     width: 400px;
     height: 400px;
-    transform: translate(-50%, -50%);
     background-image: url("{% static 'accounts/images/HRISLOGO.jpg' %}");
     background-repeat: no-repeat;
     background-size: contain;
-    opacity: 0.5;   /* ← subtle watermark */
+    opacity: 0.08;   /* 👈 lighter so it doesn't interfere */
     z-index: 0;
   }
 
@@ -452,9 +540,9 @@
   }
 
   .print-date,
-  .logs-wrapper,
+  .print-table,
   .print-date *,
-  .logs-wrapper * {
+  .print-table * {
     visibility: visible;
     position: relative;
     z-index: 1;   /* keeps text above watermark */
@@ -468,10 +556,8 @@
     margin-bottom: 25px;
   }
 
-  .log-item {
-    border: 1px solid #000;
-    background: #fff;
-  }
+
+
 }
 
 
@@ -588,7 +674,28 @@
 
 
 
-
+          <table class="print-table">
+            <thead>
+              <tr>
+                <th>Employee Name</th>
+                <th>Time In</th>
+                <th>Time Out</th>
+                <th>Hours</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in recent_logs %}
+              <tr>
+                <td>{{ log.employee.fname }} {{ log.employee.lname }}</td>
+                <td>{{ log.time_in|default:"—" }}</td>
+                <td>{{ log.time_out|default:"—" }}</td>
+                <td>{{ log.hours_worked|default:"—" }}</td>
+                <td>{{ log.get_status_display }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
           <div class="logs-wrapper">
             {% for log in recent_logs %}
               <div class="log-item">
@@ -610,7 +717,17 @@
                 <div class="log-hours">
                   {% if log.hours_worked %}{{ log.hours_worked }}{% else %}—{% endif %} hrs
                 </div>
-                <div class="log-badge {% if log.status in 'fieldwork health' %}leave{% endif %}">
+                <div class="log-badge 
+                  {% if log.status == 'PRESENT' %}
+                    present
+                  {% elif log.status == 'ABSENT' %}
+                    absent
+                  {% elif log.status == 'LATE' %}
+                    late
+                  {% elif log.status == 'ON LEAVE' %}
+                    onleave
+                  {% endif %}
+                ">
                   {{ log.get_status_display }}
                 </div>
               </div>
@@ -666,7 +783,7 @@
 
         <div class="field-group">
           <button type="submit" class="btn-generate">
-            Generate report
+            Sort
           </button>
         </div>
 

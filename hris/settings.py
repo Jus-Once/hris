@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv(
     "django-insecure-9t7b+=_+$xd+=e&0gft+9grb_u0#kxn@91@9fpzno2ghbu28%4",
 )
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
@@ -31,6 +31,8 @@ ALLOWED_HOSTS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "https://hris-4-iqxd.onrender.com",
+    "https://hrispaombong.org",
+    "https://www.hrispaombong.org",
 ]
 # =========================================================
 # APPLICATIONS
@@ -139,8 +141,8 @@ STATICFILES_STORAGE = (
     "whitenoise.storage.CompressedManifestStaticFilesStorage"
 )
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # =========================================================
 # DEFAULT PRIMARY KEY FIELD TYPE

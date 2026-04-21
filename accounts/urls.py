@@ -6,7 +6,8 @@ urlpatterns = [
     path("attendance/scan/", views.employee_qr_page, name="employee_qr_page"),
     path("attendance/submit/", views.employee_qr_submit, name="employee_qr_submit"),
 
-
+    path("employee/leave/", views.employee_leave, name="employee_leave"),
+    
     path('qr-attendance/', views.admin_qr_attendance, name='qr_attendance'),
     
     path('adminlogin', views.adminlogin, name='adminlogin'),

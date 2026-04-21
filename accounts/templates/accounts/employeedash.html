@@ -429,9 +429,9 @@
           <span>Dashboard</span>
         </div>
 
-        <div class="side-item" onclick="window.location.href='{% url 'payslip' %}'">
-          <div class="side-item-icon">🧾</div>
-          <span>Payslip/Taxes</span>
+        <div class="side-item" onclick="window.location.href='{% url 'employee_leave' %}'">
+          <div class="side-item-icon">➜]</div>
+          <span>Leave Requests</span>
         </div>
 
 
@@ -452,35 +452,16 @@
         <article class="card">
           <h2 class="card-title">Leave Overview</h2>
 
-          {% if is_regular %}
-            <div class="leave-item">
-              <span>Annual Sick Leave:</span>
-              {{ sick_annual }} days
-            </div>
-
-            <div class="leave-item">
-              <span>Total Lates This Year:</span>
-              {{ total_lates }}
-            </div>
-
-            <div class="leave-item">
-              <span>Total Absences This Year:</span>
-              {{ total_absents }}
-            </div>
-
-            <div class="leave-item">
-              <span>Sick Leave Deducted (from lates/absences):</span>
-              {{ sick_days_deducted }} days
-            </div>
-
-            <div class="leave-item">
-              <span>Sick Leave Remaining:</span>
-              {{ sick_remaining }} days
-            </div>
+          {% if leave_balances %}
+            {% for leave in leave_balances %}
+              <div class="leave-item">
+                <span>{{ leave.name }}:</span>
+                {{ leave.remaining }} / {{ leave.limit }} days
+              </div>
+            {% endfor %}
           {% else %}
             <div class="leave-item">
-              <span>Sick Leave:</span>
-              Not applicable for Job Order employees.
+              No leave data available.
             </div>
           {% endif %}
         </article>
@@ -504,17 +485,30 @@
   {% endif %}
 {% endif %}
 
-{% if today_attendance and today_attendance.time_out %}
+{% if active_leave %}
+
+  <p style="font-size:13px;color:orange;">
+    🟠 You are on leave today
+  </p>
+
+  <button disabled
+    style="width:100%;border-radius:999px;padding:10px;border:none;
+           background:#ccc;color:#666;font-size:14px;cursor:not-allowed;">
+    🚫 On Leave
+  </button>
+
+{% elif today_attendance and today_attendance.time_out %}
   <p style="font-size:13px;color:#00a876;">
     ✅ Attendance completed for today
   </p>
+
 {% else %}
-  <button
-  id="scanQrBtn"
-  style="width:100%;border-radius:999px;padding:10px;border:none;
-         background:#00c28a;color:#fff;font-size:14px;cursor:pointer;">
-  📷 Scan Attendance QR
-</button>
+
+  <button id="scanQrBtn"
+    style="width:100%;border-radius:999px;padding:10px;border:none;
+           background:#00c28a;color:#fff;font-size:14px;cursor:pointer;">
+    📷 Scan Attendance QR
+  </button>
 
 {% endif %}
 
@@ -562,11 +556,15 @@
               </span>
               <span>
                 Status:
-                {% if today_attendance %}
-                  {{ today_attendance.get_status_display }}
-                {% else %}
-                  -
-                {% endif %}
+                  {% if active_leave %}
+                    🟠 On Leave
+
+                  {% elif today_attendance %}
+                    {{ today_attendance.get_status_display }}
+
+                  {% else %}
+                    -
+                  {% endif %}
               </span>
             </div>
           </div>
